@@ -121,3 +121,16 @@ export function syncAllBills(d: AppData): void {
   }
   d.bills = out;
 }
+
+/**
+ * Months a pay-ahead package would cover: the next n billed, unpaid months
+ * starting from the current month (or the first billed month, if later).
+ */
+export function prepayPlan(unit: Unit, type: UnitType, settings: ProjectSettings, renter: Renter | undefined, bills: Bill[], today: ISODate, n: number): MonthKey[] {
+  if (!unit.handover.bastDate) return [];
+  const current = monthOf(today);
+  const first = firstBilledMonth(unit.handover.bastDate, settings.ipl);
+  const start = first > current ? first : current;
+  const candidates = syncBills(unit, type, settings, renter, bills, today, addMonths(start, n + 1));
+  return prepayMonths(candidates, current, n);
+}

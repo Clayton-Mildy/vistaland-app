@@ -1,18 +1,27 @@
 import { useCallback, useSyncExternalStore } from 'react';
+import { formatDate } from '../domain/clock';
 import type { I18nText, Lang } from '../domain/types';
 
 export type Dict = Record<string, string>;
 export type Params = Record<string, string | number>;
 export type TFn = (key: string, params?: Params) => string;
 
-const interpolate = (s: string, params?: Params) =>
-  params ? s.replace(/\{(\w+)\}/g, (m, k) => (k in params ? String(params[k]) : m)) : s;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+/** Fills {params}; ISO dates are rendered in the reader's language. */
+const interpolate = (s: string, lang: Lang, params?: Params) =>
+  params
+    ? s.replace(/\{(\w+)\}/g, (m, k) => {
+        if (!(k in params)) return m;
+        const v = params[k];
+        return typeof v === 'string' && ISO_DATE.test(v) ? formatDate(v, lang, 'long') : String(v);
+      })
+    : s;
 
 /** Builds a translator over explicit dictionaries: EN falls back to ID, then to the key. */
 export function createTranslator(dicts: Record<Lang, Dict>) {
   return (lang: Lang, key: string, params?: Params): string => {
     const s = dicts[lang][key] ?? dicts.id[key] ?? key;
-    return interpolate(s, params);
+    return interpolate(s, lang, params);
   };
 }
 

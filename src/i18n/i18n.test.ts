@@ -11,6 +11,11 @@ describe('translate', () => {
     expect(t('en', 'x.greet', { name: 'Rina' })).toBe('Hi, Rina');
     expect(t('id', 'x.greet', { name: 'Rina' })).toBe('Halo, Rina');
   });
+  test('ISO date params render in the reader language', () => {
+    const tt = createTranslator({ id: { d: 'Jatuh tempo {date}' }, en: { d: 'Due {date}' } });
+    expect(tt('id', 'd', { date: '2026-08-10' })).toBe('Jatuh tempo 10 Agu 2026');
+    expect(tt('en', 'd', { date: '2026-08-10' })).toBe('Due 10 Aug 2026');
+  });
   test('falls back to Indonesian, then to the key', () => {
     expect(t('en', 'x.only')).toBe('Hanya ID');
     expect(t('en', 'x.missing')).toBe('x.missing');
