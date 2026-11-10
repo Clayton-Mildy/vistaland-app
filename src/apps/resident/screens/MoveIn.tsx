@@ -6,7 +6,6 @@ import type { MoveInPermit } from '../../../domain/types';
 import { useLang, useT } from '../../../i18n';
 import { requestMoveIn, selfReportMoveIn } from '../../../store/actions';
 import { useData, useResident, useRun, useToday } from '../../../store/hooks';
-import { AppBar } from '../../../ui/AppBar';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { cx } from '../../../ui/cx';
@@ -14,6 +13,8 @@ import { Checkbox, Field, Input, Select } from '../../../ui/Field';
 import { Sheet } from '../../../ui/Sheet';
 import { StatusPill } from '../../../ui/StatusPill';
 import { useToast } from '../../../ui/Toast';
+import { ScreenBody } from '../ui/ScreenBody';
+import { ScreenHeader } from '../ui/ScreenHeader';
 
 const VEHICLES: MoveInPermit['vehicle'][] = ['pickup', 'trukEngkel', 'trukBesar'];
 
@@ -48,13 +49,13 @@ export default function MoveIn() {
 
   return (
     <div>
-      <AppBar title={t('movein.title')} />
-      <div className="space-y-3 p-4">
+      <ScreenHeader title={t('movein.title')} eyebrow={`Unit ${ctx.unit.code}`} sub={occupied ? undefined : t('movein.intro')} />
+      <ScreenBody>
         {occupied && (
           <Card className="flex items-center gap-3 border-[#BDE5CB] bg-[#F2FBF5]">
             <CheckCircle2 className="h-6 w-6 shrink-0 text-[#17703D]" />
             <div>
-              <p className="font-bold text-[#17703D]">{t('movein.occupied')}</p>
+              <p className="font-semibold text-[#17703D]">{t('movein.occupied')}</p>
               <p className="text-sm text-ink/60">
                 {t('movein.occupiedSince', { date: formatDate((renterId ? ctx.renter?.movedInAt : ctx.unit.moveIn?.date) ?? today, lang) })}
                 {!renterId && ctx.unit.moveIn && ` · ${t(`movein.source.${ctx.unit.moveIn.source}`)}`}
@@ -62,12 +63,11 @@ export default function MoveIn() {
             </div>
           </Card>
         )}
-        {!occupied && <p className="px-1 text-sm text-ink/60">{t('movein.intro')}</p>}
 
         {permit && !editing && (
           <Card>
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 font-bold"><Truck className="h-5 w-5 text-brand" />{t('movein.permit')}</span>
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 text-base font-semibold"><Truck className="h-5 w-5 text-brand-dark" strokeWidth={1.75} />{t('movein.permit')}</span>
               <StatusPill tone={permit.status === 'entered' ? 'success' : 'info'}>{permit.status === 'entered' ? t('movein.entered', { time: formatTime(permit.enteredAt ?? '') }) : t('movein.registered')}</StatusPill>
             </div>
             <dl className="mt-3 space-y-1.5 text-sm">
@@ -93,18 +93,18 @@ export default function MoveIn() {
               </Field>
             </div>
             <div>
-              <p className="mb-1.5 text-xs font-semibold text-ink/70">{t('movein.vehicle')}</p>
+              <p className="mb-1.5 text-xs font-medium text-ink/70">{t('movein.vehicle')}</p>
               <div className="flex flex-wrap gap-2">
                 {VEHICLES.map((v) => (
-                  <button key={v} onClick={() => setVehicle(v)} className={cx('rounded-xl border px-3 py-2 text-sm font-semibold', vehicle === v ? 'border-brand bg-brand-tint text-brand-dark' : 'border-line bg-white text-ink/70')}>{t(`movein.v.${v}`)}</button>
+                  <button key={v} onClick={() => setVehicle(v)} className={cx('rounded-full border px-3.5 py-2 text-sm font-medium transition', vehicle === v ? 'border-brand-dark bg-brand-dark text-white' : 'border-line bg-white text-ink/70 hover:border-ink/25')}>{t(`movein.v.${v}`)}</button>
                 ))}
               </div>
             </div>
             <Field label={t('movein.plate')} optional={t('common.optional')}><Input placeholder="B 1234 XYZ" value={plate} onChange={(e) => setPlate(e.target.value.toUpperCase())} /></Field>
             {offerWifi && (
-              <div className="rounded-2xl bg-brand-tint/50 p-3">
+              <div className="rounded-2xl border border-line bg-paper p-3">
                 <Checkbox checked={withWifi} onChange={setWithWifi}>
-                  <b>{t('movein.wifiTitle')}</b>
+                  <span className="font-semibold">{t('movein.wifiTitle')}</span>
                   <span className="block text-xs text-ink/55">{ctx.settings.wifi.promoEnabled ? t('movein.wifiPromo', { n: ctx.settings.wifi.freeMonths }) : t('movein.wifiNoPromo')}</span>
                 </Checkbox>
                 {withWifi && (
@@ -120,12 +120,12 @@ export default function MoveIn() {
 
         {!occupied && !renterId && (
           <Card>
-            <p className="font-bold">{t('movein.selfTitle')}</p>
+            <p className="text-base font-semibold">{t('movein.selfTitle')}</p>
             <p className="mt-1 text-sm text-ink/55">{ctx.unit.selfReportedMoveIn ? t('movein.selfPending', { date: formatDate(ctx.unit.selfReportedMoveIn, lang) }) : t('movein.selfBody')}</p>
             {!ctx.unit.selfReportedMoveIn && <Button className="mt-3" variant="secondary" onClick={() => setSelfOpen(true)}>{t('movein.selfCta')}</Button>}
           </Card>
         )}
-      </div>
+      </ScreenBody>
       <Sheet open={selfOpen} onClose={() => setSelfOpen(false)} title={t('movein.selfTitle')}>
         <Field label={t('movein.selfSince')}><Input type="date" max={today} value={selfDate} onChange={(e) => setSelfDate(e.target.value)} /></Field>
         <Button className="mt-4" block onClick={() => { run(selfReportMoveIn, { unitId: ctx.unit.id, date: selfDate }); setSelfOpen(false); toast.show(t('movein.selfSent')); }}>{t('common.submit')}</Button>

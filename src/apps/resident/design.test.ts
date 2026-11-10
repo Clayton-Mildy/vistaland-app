@@ -33,6 +33,10 @@ export const REFRESHED: string[] = [
   'src/apps/resident/screens/PaySheet.tsx',
   'src/apps/resident/screens/Wifi.tsx',
   'src/apps/resident/screens/Cards.tsx',
+  // Task 7
+  'src/apps/resident/screens/Handover.tsx',
+  'src/apps/resident/screens/Rules.tsx',
+  'src/apps/resident/screens/MoveIn.tsx',
 ];
 
 const RULES: [string, RegExp][] = [
