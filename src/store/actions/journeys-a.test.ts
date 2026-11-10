@@ -91,7 +91,10 @@ describe('J7 settings ripple', () => {
     d = apply(d, setUnitTypeRate, { typeId: 'vh-45', rate: 400000 });
     expect(iplBills(d, 'vh-A1-07').find((b) => b.month === '2026-12')!.amount).toBe(400000);
     expect(iplBills(d, 'vh-A1-07').find((b) => b.month === '2026-11')!.amount).toBe(350000);
-    expect(d.activity.length).toBe(2);
+    expect(d.activity.map((a) => [a.text.key, a.text.params])).toEqual([
+      ['activity.settingsChanged.wifi', {}],
+      ['activity.rateChanged', { type: 'Tipe 45/90', rate: 'Rp400.000' }],
+    ]);
   });
   test('subsidized projects cannot switch on renter registration or house listings', () => {
     const d = apply(buildSeed(), updateSettings, { projectId: 'hp', patch: { features: { renterRegistration: true, houseListings: true, panic: true } } });
@@ -174,4 +177,11 @@ test('estate records a cash payment for overdue months: exact bill amounts, no f
   expect(overdueBills(d.bills.filter((b) => b.unitId === 'vh-A1-07' && b.kind === 'ipl'), d.today, s.ipl.dueDay)).toHaveLength(0);
   expect(d.activity.at(-1)).toMatchObject({ projectId: 'vh', by: 'Admin Estate', text: { key: 'activity.paymentRecorded' } });
   expect(d.notifications.some((n) => n.to === 'owner:1107' && n.text.key === 'notif.paymentRecorded')).toBe(true);
+});
+
+test('estate only offers the consequence types switched on in settings', () => {
+  let d = apply(buildSeed(), updateSettings, { projectId: 'vh', patch: { overdue: { offered: ['warningLetter'] } } });
+  expect(() => apply(d, applyConsequence, { unitId: 'vh-A1-07', type: 'cardSuspended', by: 'Admin Estate' })).toThrow('error.featureDisabled');
+  d = apply(d, applyConsequence, { unitId: 'vh-A1-07', type: 'warningLetter', by: 'Admin Estate' });
+  expect(unit(d, 'vh-A1-07').consequences.map((c) => c.type)).toEqual(['warningLetter']);
 });

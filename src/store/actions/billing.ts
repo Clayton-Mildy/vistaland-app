@@ -1,6 +1,7 @@
 import { addMonths, monthOf, nowISO } from '../../domain/clock';
 import { overdueBills, prepayPlan, prepayQuote } from '../../domain/ipl';
 import { formatRp } from '../../domain/money';
+import { offeredConsequences } from '../../domain/consequences';
 import type { Consequence, ISODate, MonthKey, Payment, Vehicle, WifiSub } from '../../domain/types';
 import { ActionError } from '../errors';
 import { nextId } from '../ids';
@@ -114,6 +115,7 @@ export const setCardOrderStatus: Action<{ orderId: string; status: 'toMake' | 'r
 /** Manual consequence for arrears. Nothing here runs automatically. */
 export const applyConsequence: Action<{ unitId: string; type: Consequence['type']; note?: string; by: string }> = (d, p) => {
   const unit = unitOf(d, p.unitId);
+  if (!offeredConsequences(projectOf(d, unit.projectId).settings).includes(p.type)) throw new ActionError('error.featureDisabled');
   unit.consequences.push({ id: nextId(d, 'CNS'), type: p.type, startedAt: d.today, by: p.by, note: p.note });
   logActivity(d, unit.projectId, p.by, `activity.consequenceApplied.${p.type}`, { unit: unit.code });
   notify(d, ownerKey(unit.ownerCustomerId), `notif.consequence.${p.type}`, { unit: unit.code }, '/app/bills');

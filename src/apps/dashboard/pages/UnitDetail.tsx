@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { dayOfMonth, diffDays, formatDate, formatDateTime } from '../../../domain/clock';
 import { billStatus, firstBilledMonth } from '../../../domain/ipl';
 import { formatRp } from '../../../domain/money';
+import { offeredConsequences } from '../../../domain/consequences';
 import { unitBillingRows } from '../../../domain/report';
 import type { Bill, Consequence, LegalDoc, MonthKey, Payment, Unit } from '../../../domain/types';
 import { useLang, useT } from '../../../i18n';
@@ -21,7 +22,6 @@ import { Panel } from '../components/Panel';
 import { CELL } from './IplList';
 import { ADMIN_BY, maskPhone } from '../util';
 
-const CNS_TYPES: Consequence['type'][] = ['cardSuspended', 'garbageStopped', 'warningLetter'];
 const CNS_ICON = { cardSuspended: Ban, garbageStopped: Trash2, warningLetter: FileWarning };
 const METHODS: Payment['method'][] = ['cash', 'transfer', 'qris', 'va'];
 const LEGAL_DOCS = ['certificate', 'pbg', 'pbb'] as const;
@@ -146,7 +146,7 @@ export default function UnitDetail() {
 
         <div className="min-w-0 space-y-4">
           <RecordPayment unitId={u.id} today={today} dueDay={s.ipl.dueDay} bills={row.bills} />
-          <Consequences unitId={u.id} active={row.activeConsequences} needsAction={row.needsAction} flagMonths={s.overdue.flagMonths} paidUp={row.overdueMonths === 0} />
+          <Consequences unitId={u.id} active={row.activeConsequences} needsAction={row.needsAction} flagMonths={s.overdue.flagMonths} paidUp={row.overdueMonths === 0} offered={offeredConsequences(s)} />
           <Panel title={t('dash.unit.activity')} pad={false}>
             {data.activity.length ? (
               <ul className="max-h-72 divide-y divide-line/70 overflow-y-auto">
@@ -244,7 +244,7 @@ function RecordPayment({ unitId, today, dueDay, bills }: { unitId: string; today
   );
 }
 
-function Consequences({ unitId, active, needsAction, flagMonths, paidUp }: { unitId: string; active: Consequence[]; needsAction: boolean; flagMonths: number; paidUp: boolean }) {
+function Consequences({ unitId, active, needsAction, flagMonths, paidUp, offered }: { unitId: string; active: Consequence[]; needsAction: boolean; flagMonths: number; paidUp: boolean; offered: Consequence['type'][] }) {
   const t = useT();
   const [lang] = useLang();
   const run = useRun();
@@ -284,7 +284,7 @@ function Consequences({ unitId, active, needsAction, flagMonths, paidUp }: { uni
         <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('dash.cns.notePh')} />
       </Field>
       <div className="mt-2 grid gap-1.5">
-        {CNS_TYPES.map((type) => {
+        {offered.map((type) => {
           const Icon = CNS_ICON[type];
           const on = active.some((c) => c.type === type);
           return (

@@ -26,7 +26,7 @@ export interface ProjectSettings {
   complaints: { windowDays: number; slaDays: Record<ComplaintCategory, number> };
   handover: { intervalDays: number; maxCalls: number; autoBast: boolean };
   renovation: { deposit: number; checklist: string[] };
-  overdue: { flagMonths: number };
+  overdue: { flagMonths: number; offered: Consequence['type'][] };
   fuel: { litersPer1000m2: number; tolerancePct: number };
   budget: Record<ExpenseCategory, number>;
   features: Record<FeatureKey, boolean>;

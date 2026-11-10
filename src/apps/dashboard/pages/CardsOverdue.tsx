@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDate, monthOf } from '../../../domain/clock';
 import { formatRp } from '../../../domain/money';
+import { offeredConsequences } from '../../../domain/consequences';
 import { unitBillingRows } from '../../../domain/report';
 import type { CardOrder, Consequence } from '../../../domain/types';
 import { useLang, useT } from '../../../i18n';
@@ -42,7 +43,7 @@ export default function CardsOverdue() {
       .flatMap((u) => u.consequences.map((c) => ({ c, code: u.code, unitId: u.id })))
       .sort((a, b) => (b.c.endedAt ?? b.c.startedAt).localeCompare(a.c.endedAt ?? a.c.startedAt));
     const s = d.projects.find((p) => p.id === project.id)!.settings;
-    return { orders, rows, history, month: monthOf(d.today), flagMonths: s.overdue.flagMonths };
+    return { orders, rows, history, month: monthOf(d.today), flagMonths: s.overdue.flagMonths, offered: offeredConsequences(s) };
   }, [project.id]);
 
   const k = {
@@ -156,7 +157,7 @@ export default function CardsOverdue() {
               header: '',
               render: (r) => (
                 <span className="flex items-center justify-end gap-1.5">
-                  {!r.activeConsequences.some((c) => c.type === 'warningLetter') && (
+                  {data.offered.includes('warningLetter') && !r.activeConsequences.some((c) => c.type === 'warningLetter') && (
                     <Button size="sm" variant="secondary" className="whitespace-nowrap" icon={<FileWarning className="h-3.5 w-3.5" />} onClick={() => act(r.unit.id, 'warningLetter')}>{t('dash.cards.sendWarning')}</Button>
                   )}
                   <Select
@@ -166,7 +167,7 @@ export default function CardsOverdue() {
                     className="!w-auto !py-1.5 text-xs"
                   >
                     <option value="">{t('dash.cards.moreActions')}</option>
-                    {(['cardSuspended', 'garbageStopped'] as const).filter((type) => !r.activeConsequences.some((c) => c.type === type)).map((type) => (
+                    {(['cardSuspended', 'garbageStopped'] as const).filter((type) => data.offered.includes(type) && !r.activeConsequences.some((c) => c.type === type)).map((type) => (
                       <option key={type} value={type}>{t(`dash.cns.do.${type}`)}</option>
                     ))}
                   </Select>

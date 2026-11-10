@@ -17,6 +17,12 @@ body {
 .no-scrollbar { scrollbar-width: none; }
 .tabular { font-variant-numeric: tabular-nums; }
 @media print {
+  @page { size: A4; margin: 12mm; }
   .no-print { display: none !important; }
   body { background: white; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .print-avoid { break-inside: avoid; }
+  main { padding: 0 !important; }
+  .shadow-card { box-shadow: none !important; }
+  [class*="bg-[#F4F2EE]"] { background: white !important; }
 }

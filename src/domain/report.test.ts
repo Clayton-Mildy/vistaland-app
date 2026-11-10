@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { buildSeed } from '../data/seed';
 import { addDays } from './clock';
-import { complaintKpis, monthlyRecap, monthlyReport, needsFollowUp, occupancyFunnel, unitBillingRows } from './report';
+import { complaintKpis, monthlyRecap, monthlyReport, needsFollowUp, occupancyFunnel, reportHealth, unitBillingRows } from './report';
 import type { Finding, FindingStage } from './types';
 
 const d = buildSeed();
@@ -83,4 +83,24 @@ test('complaint KPIs list units whose window closes within 7 days and that never
   expect(ids).toContain(quiet.id);
   expect(ids).not.toContain('vh-C1-12');
   expect(ids).not.toContain(later.id);
+});
+
+test('report health grades each area good / watch / attention from its numbers', () => {
+  const base = monthlyReport(d, 'vh', '2026-11');
+  const grade = (patch: (r: typeof base) => void) => {
+    const r = structuredClone(base);
+    patch(r);
+    return Object.fromEntries(reportHealth(r, 5).map((x) => [x.key, x.status]));
+  };
+  expect(grade((r) => { r.ipl.collectionRate = 85; r.ipl.mustPay = 10; }).collection).toBe('good');
+  expect(grade((r) => { r.ipl.collectionRate = 70; r.ipl.mustPay = 10; }).collection).toBe('watch');
+  expect(grade((r) => { r.ipl.collectionRate = 69; r.ipl.mustPay = 10; }).collection).toBe('attention');
+  expect(grade((r) => { r.finance.cost = 1000; r.finance.net = -100; }).finance).toBe('watch');
+  expect(grade((r) => { r.finance.cost = 1000; r.finance.net = -101; }).finance).toBe('attention');
+  expect(grade((r) => { r.complaints.overSla = 0; }).complaints).toBe('good');
+  expect(grade((r) => { r.complaints.overSla = 3; }).complaints).toBe('attention');
+  expect(grade((r) => { r.fuel = null; }).fuel).toBe('good');
+  expect(grade((r) => { r.fuel!.unexplainedPct = 9; r.fuel!.withinTolerance = false; }).fuel).toBe('watch');
+  expect(grade((r) => { r.compliance = { rulesSigned: 0, occupied: 0 }; }).compliance).toBe('good');
+  expect(reportHealth(base, 5).map((x) => x.key)).toEqual(['occupancy', 'collection', 'finance', 'complaints', 'fuel', 'compliance']);
 });

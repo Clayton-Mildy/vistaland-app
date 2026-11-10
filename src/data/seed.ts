@@ -49,7 +49,7 @@ function defaultSettings(segment: Segment): ProjectSettings {
       deposit: vh ? 5000000 : 2000000,
       checklist: ['inspect.drain', 'inspect.road', 'inspect.neighbour', 'inspect.debris', 'inspect.drawing'],
     },
-    overdue: { flagMonths: 2 },
+    overdue: { flagMonths: 2, offered: ['cardSuspended', 'garbageStopped', 'warningLetter'] },
     fuel: { litersPer1000m2: 1.8, tolerancePct: 10 },
     budget: vh
       ? { satpam: 9000000, tukangTaman: 3000000, listrik: 2200000, kolamRenang: 1500000, angkutSampah: 1200000, landscape: 1200000, clubhouse: 1000000, lainnya: 500000 }

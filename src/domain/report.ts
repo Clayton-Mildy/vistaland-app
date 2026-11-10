@@ -233,3 +233,23 @@ export function complaintKpis(d: AppData, projectId: string) {
       .map((u) => u.id),
   };
 }
+
+export type Health = 'good' | 'watch' | 'attention';
+export interface HealthTile { key: 'occupancy' | 'collection' | 'finance' | 'complaints' | 'fuel' | 'compliance'; status: Health; value: number }
+
+const band = (pct: number, good: number, watch: number): Health => (pct >= good ? 'good' : pct >= watch ? 'watch' : 'attention');
+
+/** Six traffic-light tiles for the monthly report. `value` is the number the tile shows (a percentage or a count). */
+export function reportHealth(r: ReturnType<typeof monthlyReport>, tolerancePct: number): HealthTile[] {
+  const occupancy = r.funnel.handover ? Math.round((r.funnel.occupied / r.funnel.handover) * 100) : 0;
+  const compliance = r.compliance.occupied ? Math.round((r.compliance.rulesSigned / r.compliance.occupied) * 100) : 100;
+  const deficitPct = r.finance.cost ? (-r.finance.net / r.finance.cost) * 100 : 0;
+  return [
+    { key: 'occupancy', value: occupancy, status: r.funnel.handover ? band(occupancy, 80, 60) : 'good' },
+    { key: 'collection', value: r.ipl.collectionRate, status: r.ipl.mustPay ? band(r.ipl.collectionRate, 85, 70) : 'good' },
+    { key: 'finance', value: r.finance.net, status: r.finance.net >= 0 ? 'good' : deficitPct <= 10 ? 'watch' : 'attention' },
+    { key: 'complaints', value: r.complaints.overSla, status: r.complaints.overSla === 0 ? 'good' : r.complaints.overSla <= 2 ? 'watch' : 'attention' },
+    { key: 'fuel', value: r.fuel?.unexplainedPct ?? 0, status: !r.fuel || r.fuel.withinTolerance ? 'good' : r.fuel.unexplainedPct <= tolerancePct * 2 ? 'watch' : 'attention' },
+    { key: 'compliance', value: compliance, status: band(compliance, 90, 75) },
+  ];
+}
