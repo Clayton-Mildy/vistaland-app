@@ -13,3 +13,9 @@ export function downloadCsv(filename: string, rows: (string | number)[][]) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+/** Name recorded in the activity log for actions taken from this console. */
+export const ADMIN_BY = 'Admin Estate';
+
+/** Block of a unit code: "A1/07" → "A1". */
+export const blockOf = (code: string) => code.split('/')[0];

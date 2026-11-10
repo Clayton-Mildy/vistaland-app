@@ -6,8 +6,8 @@ import { billStatus, overdueBills, prepayQuote } from '../../domain/ipl';
 import type { AppData, ResidentIdentity } from '../../domain/types';
 import { apply } from '../test/apply';
 import { setToday } from './demo';
-import { applyConsequence, liftConsequence, payBills, requestWifi, setWifiStatus } from './billing';
-import { confirmMoveInAtGate, markReadyForHandover, pickHandoverSlot, requestMoveIn, saveHandoverChecklist, schedulePbbPickup, sendHandoverCall, sendHandoverReceipt, signBast, signRules } from './onboarding';
+import { applyConsequence, liftConsequence, payBills, recordPaymentAdmin, requestWifi, setWifiStatus } from './billing';
+import { confirmMoveInAtGate, markReadyForHandover, pickHandoverSlot, requestMoveIn, saveHandoverChecklist, schedulePbbPickup, sendHandoverCall, updateLegalDoc, sendHandoverReceipt, signBast, signRules } from './onboarding';
 import { acceptPanic, resolvePanic, triggerPanic } from './security';
 import { activateApp } from './session';
 import { setUnitTypeRate, updateSettings } from './settings';
@@ -75,7 +75,7 @@ describe('J6 IPL marking (Andi)', () => {
     const c = unit(d, 'vh-A1-07').consequences[0];
     d = apply(d, liftConsequence, { unitId: 'vh-A1-07', consequenceId: c.id, by: 'Admin Estate' });
     expect(unit(d, 'vh-A1-07').consequences[0].endedAt).toBe('2026-11-10');
-    expect(d.activity.filter((a) => a.projectId === 'vh')).toHaveLength(2);
+    expect(d.activity.filter((a) => a.projectId === 'vh').map((a) => a.text.key)).toEqual(['activity.consequenceApplied.cardSuspended', 'activity.consequenceLifted.cardSuspended']);
     expect(d.notifications.filter((n) => n.to === 'owner:1107' && n.text.key.startsWith('notif.consequence')).length).toBe(2);
   });
 });
@@ -143,4 +143,35 @@ test('PBB pickup booking is stored on the unit and the estate is told', () => {
   expect(unit(d, 'vh-B1-02').legal!.pbb.pickup).toEqual({ date: '2026-11-12' });
   expect(d.notifications.some((n) => n.to === 'admin:vh' && n.text.key === 'notif.admin.pbbPickup')).toBe(true);
   expect(() => apply(buildSeed(), schedulePbbPickup, { unitId: 'hp-C3-14', date: '2026-11-12' })).toThrow();
+});
+
+describe('legal documents (estate editor)', () => {
+  test('marking the certificate ready adds a dated step, keeps the number and tells the owner', () => {
+    const d = apply(buildSeed(), updateLegalDoc, { unitId: 'vh-B1-02', doc: 'certificate', status: 'ready', by: 'Admin Estate' });
+    const cert = d.units.find((u) => u.id === 'vh-B1-02')!.legal!.certificate;
+    expect(cert).toMatchObject({ status: 'ready', number: 'SHGB 04.21.10.02.1.0412' });
+    expect(cert.steps.at(-1)).toEqual({ key: 'readyForPickup', date: '2026-11-10' });
+    expect(d.notifications.some((n) => n.to === 'owner:1102' && n.text.key === 'notif.legalUpdated' && n.link === '/app/legal')).toBe(true);
+  });
+  test('saving the same status only updates the number', () => {
+    const before = buildSeed();
+    const d = apply(before, updateLegalDoc, { unitId: 'vh-B1-02', doc: 'pbg', status: 'atBank', number: 'PBG-NEW-1', by: 'Admin Estate' });
+    const pbg = d.units.find((u) => u.id === 'vh-B1-02')!.legal!.pbg;
+    expect(pbg.number).toBe('PBG-NEW-1');
+    expect(pbg.steps).toHaveLength(before.units.find((u) => u.id === 'vh-B1-02')!.legal!.pbg.steps.length);
+  });
+  test('units without legal records (subsidized) are refused', () => {
+    expect(() => apply(buildSeed(), updateLegalDoc, { unitId: 'hp-C3-14', doc: 'pbb', status: 'ready', by: 'Admin Estate' })).toThrow('error.featureDisabled');
+  });
+});
+
+test('estate records a cash payment for overdue months: exact bill amounts, no fine, logged and receipted', () => {
+  const seed = buildSeed();
+  const s = seed.projects.find((p) => p.id === 'vh')!.settings;
+  const od = overdueBills(seed.bills.filter((b) => b.unitId === 'vh-A1-07' && b.kind === 'ipl'), seed.today, s.ipl.dueDay);
+  const d = apply(seed, recordPaymentAdmin, { unitId: 'vh-A1-07', months: od.map((b) => b.month), method: 'cash', date: '2026-11-09', by: 'Admin Estate' });
+  expect(d.payments.at(-1)).toMatchObject({ recordedBy: 'admin', method: 'cash', amount: od.reduce((a, b) => a + b.amount, 0), discount: 0, paidAt: '2026-11-09T12:00:00' });
+  expect(overdueBills(d.bills.filter((b) => b.unitId === 'vh-A1-07' && b.kind === 'ipl'), d.today, s.ipl.dueDay)).toHaveLength(0);
+  expect(d.activity.at(-1)).toMatchObject({ projectId: 'vh', by: 'Admin Estate', text: { key: 'activity.paymentRecorded' } });
+  expect(d.notifications.some((n) => n.to === 'owner:1107' && n.text.key === 'notif.paymentRecorded')).toBe(true);
 });

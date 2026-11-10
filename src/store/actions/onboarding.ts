@@ -1,9 +1,9 @@
 import { addDays, nowISO } from '../../domain/clock';
 import { RULES_VERSION, WIFI_SLOTS } from '../../data/content';
-import type { AppData, HandoverChecklist, HandoverCall, ISODate, MoveInPermit } from '../../domain/types';
+import type { AppData, HandoverChecklist, HandoverCall, ISODate, LegalDoc, MoveInPermit } from '../../domain/types';
 import { ActionError } from '../errors';
 import { nextId } from '../ids';
-import { notify, ownerKey, projectOf, unitOf } from '../notify';
+import { logActivity, notify, ownerKey, projectOf, unitOf } from '../notify';
 import type { Action } from '../store';
 import { requestWifi } from './billing';
 import { resyncUnit } from './billingSync';
@@ -150,4 +150,24 @@ export const schedulePbbPickup: Action<{ unitId: string; date: ISODate }> = (d, 
   if (!unit.legal) throw new ActionError('error.featureDisabled');
   unit.legal.pbb.pickup = { date: p.date };
   notify(d, `admin:${unit.projectId}`, 'notif.admin.pbbPickup', { unit: unit.code, date: p.date }, `/dashboard/ipl/${unit.id}`);
+};
+
+const LEGAL_STEP: Record<LegalDoc['status'], string | null> = { process: null, atBank: 'atBank', ready: 'readyForPickup', withCustomer: 'pickedUp' };
+
+/** Estate updates a legal document. A status change adds a dated step and tells the owner. */
+export const updateLegalDoc: Action<{ unitId: string; doc: 'certificate' | 'pbg' | 'pbb'; status: LegalDoc['status']; number?: string; by: string }> = (d, p) => {
+  const unit = unitOf(d, p.unitId);
+  if (!unit.legal) throw new ActionError('error.featureDisabled');
+  const doc = unit.legal[p.doc];
+  if (p.number !== undefined) doc.number = p.number.trim() || undefined;
+  if (doc.status === p.status) return;
+  doc.status = p.status;
+  const key = LEGAL_STEP[p.status];
+  if (key) {
+    const open = doc.steps.find((s) => s.key === key && !s.date);
+    if (open) open.date = d.today;
+    else doc.steps.push({ key, date: d.today });
+  }
+  logActivity(d, unit.projectId, p.by, 'activity.legalUpdated', { unit: unit.code });
+  notify(d, ownerKey(unit.ownerCustomerId), 'notif.legalUpdated', { unit: unit.code }, '/app/legal');
 };

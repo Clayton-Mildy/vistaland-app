@@ -39,4 +39,9 @@ export default {
   "bills.wifiPrice": "{price}/bulan",
   "bills.wifiPrepay": "Bayar WiFi di muka",
   "bills.wifiPlan": "WiFi {n} bulan",
+  "bills.cns.title": "Tindakan estate untuk unit ini",
+  "bills.cns.cardSuspended": "Kartu akses dinonaktifkan sejak {date}.",
+  "bills.cns.garbageStopped": "Angkut sampah dihentikan sejak {date}.",
+  "bills.cns.warningLetter": "Surat peringatan tunggakan dikirim {date}.",
+  "bills.cns.body": "Setelah tunggakan lunas, hubungi estate agar layanan dipulihkan.",
 } as Record<string, string>;

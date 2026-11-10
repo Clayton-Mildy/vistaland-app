@@ -39,4 +39,9 @@ export default {
   "bills.wifiPrice": "{price}/month",
   "bills.wifiPrepay": "Pay WiFi ahead",
   "bills.wifiPlan": "WiFi {n} months",
+  "bills.cns.title": "Estate action on this unit",
+  "bills.cns.cardSuspended": "Access cards suspended since {date}.",
+  "bills.cns.garbageStopped": "Garbage pickup stopped since {date}.",
+  "bills.cns.warningLetter": "Arrears warning letter sent {date}.",
+  "bills.cns.body": "Once arrears are paid, contact the estate to restore services.",
 } as Record<string, string>;

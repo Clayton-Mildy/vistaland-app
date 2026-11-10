@@ -52,7 +52,7 @@ export const payBills: Action<{ unitId: string; kind: 'ipl' | 'wifi'; months?: M
 };
 
 /** Admin records a payment received outside the app (no fine option exists). */
-export const recordPaymentAdmin: Action<{ unitId: string; months: MonthKey[]; method: Payment['method']; date: ISODate }> = (d, p) => {
+export const recordPaymentAdmin: Action<{ unitId: string; months: MonthKey[]; method: Payment['method']; date: ISODate; by?: string }> = (d, p) => {
   const unit = unitOf(d, p.unitId);
   resyncUnit(d, unit.id, { ipl: p.months.slice().sort().at(-1) });
   const targets = d.bills.filter((b) => b.unitId === unit.id && b.kind === 'ipl' && p.months.includes(b.month) && !b.paymentId && !b.free);
@@ -61,6 +61,7 @@ export const recordPaymentAdmin: Action<{ unitId: string; months: MonthKey[]; me
   const payment: Payment = { id: nextId(d, 'PAY'), unitId: unit.id, kind: 'ipl', months: targets.map((b) => b.month), amount, discount: 0, method: p.method, paidAt: `${p.date}T12:00:00`, recordedBy: 'admin' };
   d.payments.push(payment);
   for (const b of targets) b.paymentId = payment.id;
+  logActivity(d, unit.projectId, p.by ?? 'Admin Estate', 'activity.paymentRecorded', { unit: unit.code, amount: formatRp(amount) });
   notify(d, payerKey(d, unit.id), 'notif.paymentRecorded', { amount: formatRp(amount) }, '/app/bills');
 };
 
@@ -114,7 +115,7 @@ export const setCardOrderStatus: Action<{ orderId: string; status: 'toMake' | 'r
 export const applyConsequence: Action<{ unitId: string; type: Consequence['type']; note?: string; by: string }> = (d, p) => {
   const unit = unitOf(d, p.unitId);
   unit.consequences.push({ id: nextId(d, 'CNS'), type: p.type, startedAt: d.today, by: p.by, note: p.note });
-  logActivity(d, unit.projectId, p.by, 'activity.consequenceApplied', { unit: unit.code, type: p.type });
+  logActivity(d, unit.projectId, p.by, `activity.consequenceApplied.${p.type}`, { unit: unit.code });
   notify(d, ownerKey(unit.ownerCustomerId), `notif.consequence.${p.type}`, { unit: unit.code }, '/app/bills');
 };
 
@@ -123,6 +124,6 @@ export const liftConsequence: Action<{ unitId: string; consequenceId: string; by
   const c = unit.consequences.find((x) => x.id === p.consequenceId);
   if (!c || c.endedAt) throw new ActionError('error.generic');
   c.endedAt = d.today;
-  logActivity(d, unit.projectId, p.by, 'activity.consequenceLifted', { unit: unit.code, type: c.type });
+  logActivity(d, unit.projectId, p.by, `activity.consequenceLifted.${c.type}`, { unit: unit.code });
   notify(d, ownerKey(unit.ownerCustomerId), 'notif.consequenceLifted', { unit: unit.code }, '/app/bills');
 };

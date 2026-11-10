@@ -1,8 +1,8 @@
-import { CheckCircle2, Info, Wifi } from 'lucide-react';
+import { CheckCircle2, Info, ShieldAlert, Wifi } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { addMonths, dayOfMonth, formatDate, monthOf } from '../../../domain/clock';
-import { firstBilledMonth, freeUntilMonth, prepayPlan, prepayQuote } from '../../../domain/ipl';
+import { firstBilledMonth, freeUntilMonth, prepayPlan } from '../../../domain/ipl';
 import { formatRp } from '../../../domain/money';
 import type { BillStatus, MonthKey, Payment, PrepayPackage } from '../../../domain/types';
 import { useLang, useT } from '../../../i18n';
@@ -15,6 +15,7 @@ import { cx } from '../../../ui/cx';
 import { StatusPill, type PillTone } from '../../../ui/StatusPill';
 import { Tabs } from '../../../ui/Tabs';
 import { useUnitBills } from '../hooks';
+import { PrepayGrid, prepayOptions } from '../PrepayGrid';
 import { PaySheet } from './PaySheet';
 
 const TONE: Record<BillStatus, PillTone> = { free: 'info', upcoming: 'neutral', due: 'warning', paid: 'success', overdue: 'danger' };
@@ -83,11 +84,12 @@ function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrep
   const lastFree = freeUntilMonth(bast, s.ipl);
   const current = monthOf(today);
   const paidThrough = bills.filter((b) => b.status === 'paid').at(-1)?.month;
+  // Consequences are owner-facing: the estate applies and restores them by hand.
+  const activeCns = ctx.role === 'owner' ? ctx.unit.consequences.filter((c) => !c.endedAt) : [];
   const isRenterPaid = (m: MonthKey) => ctx.role === 'owner' && bills.find((b) => b.month === m)?.payer === 'renter';
 
   const packages: PrepayPackage[] = s.features.prepay ? [{ id: 'ipl-1', months: 1, discountType: 'none', value: 0, active: true }, ...s.prepay.ipl.filter((p) => p.active)] : [];
-  const quotes = packages.map((p) => ({ p, q: prepayQuote(p, rate) }));
-  const best = quotes.reduce((a, b) => (b.q.discount > (a?.q.discount ?? 0) ? b : a), quotes[0]);
+  const { quotes } = prepayOptions(packages, rate);
   const selected = quotes.find((x) => x.p.id === pkgId);
   const prepayExpired = s.prepay.validUntil < today;
   const plan = selected ? (selected.p.id === 'ipl-1' ? prepayPlan(ctx.unit, ctx.type, s, ctx.renter, allBills, today, 1) : prepayPlan(ctx.unit, ctx.type, s, ctx.renter, allBills, today, selected.p.months)) : [];
@@ -117,6 +119,15 @@ function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrep
         )}
       </div>
       {overdue.length > 0 && <p className="flex items-start gap-2 px-1 text-xs text-ink/55"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />{t('bills.noFine')}</p>}
+      {activeCns.length > 0 && (
+        <div className="rounded-2xl border border-[#F3C5CA] bg-[#FFF5F6] p-3 text-sm text-[#7A1220]">
+          <p className="flex items-center gap-1.5 font-bold"><ShieldAlert className="h-4 w-4" />{t('bills.cns.title')}</p>
+          <ul className="mt-1 space-y-0.5">
+            {activeCns.map((c) => <li key={c.id}>{t(`bills.cns.${c.type}`, { date: formatDate(c.startedAt, lang) })}</li>)}
+          </ul>
+          <p className="mt-1.5 text-xs text-[#7A1220]/75">{t('bills.cns.body')}</p>
+        </div>
+      )}
 
       <Card className="divide-y divide-line p-0">
         {visible.map((b) => (
@@ -151,19 +162,7 @@ function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrep
               {prepayExpired ? (
                 <p className="mt-2 text-sm text-ink/55">{t('bills.prepayExpired')}</p>
               ) : (
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {quotes.map(({ p, q }) => (
-                    <button key={p.id} onClick={() => setPkgId(p.id)} className={cx('relative rounded-2xl border p-3 text-left transition', pkgId === p.id ? 'border-brand bg-brand-tint/50 ring-2 ring-brand/15' : 'border-line bg-white')}>
-                      {best && best.p.id === p.id && q.discount > 0 && <StatusPill tone="brand" className="mb-1">{t('bills.best')}</StatusPill>}
-                      {p.discountType === 'percent' && best?.p.id !== p.id && <StatusPill tone="success" className="mb-1">{t('home.discountPct', { n: p.value })}</StatusPill>}
-                      {p.discountType === 'freeMonths' && best?.p.id !== p.id && <StatusPill tone="success" className="mb-1">{t('home.freeMonths', { n: p.value })}</StatusPill>}
-                      <span className="block text-sm font-bold">{t('bills.nMonths', { n: p.months })}</span>
-                      <span className="block text-base font-extrabold text-brand">{formatRp(q.net)}</span>
-                      <span className="block text-[11px] text-ink/50">≈ {formatRp(Math.round(q.net / p.months))}{t('common.perMonth')}</span>
-                      {q.discount > 0 && <span className="block text-[11px] font-bold text-[#17703D]">{t('bills.save', { amount: formatRp(q.discount) })}</span>}
-                    </button>
-                  ))}
-                </div>
+                <div className="mt-3"><PrepayGrid packages={packages} rate={rate} selectedId={pkgId} onSelect={setPkgId} /></div>
               )}
               {selected && plan.length > 0 && (
                 <div className="mt-3 space-y-2">
@@ -271,17 +270,16 @@ function WifiTab({ onPay }: { onPay: (i: PayIntent) => void }) {
       {sub.status === 'installed' && prepay.length > 0 && (
         <Card>
           <p className="font-bold">{t('bills.wifiPrepay')}</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {prepay.map((p) => {
-              const q = prepayQuote(p, pkg.price);
-              return (
-                <button key={p.id} onClick={() => onPay({ kind: 'wifi', packageId: p.id, amount: q.net, label: t('bills.wifiPlan', { n: p.months }) })} className="rounded-2xl border border-line p-3 text-left hover:border-brand/50">
-                  <span className="block text-sm font-bold">{t('bills.nMonths', { n: p.months })}</span>
-                  <span className="block font-extrabold text-brand">{formatRp(q.net)}</span>
-                  {q.discount > 0 && <span className="block text-[11px] font-bold text-[#17703D]">{t('bills.save', { amount: formatRp(q.discount) })}</span>}
-                </button>
-              );
-            })}
+          <div className="mt-2">
+            <PrepayGrid
+              packages={prepay}
+              rate={pkg.price}
+              onSelect={(id) => {
+                const { quotes: wq } = prepayOptions(prepay, pkg.price);
+                const o = wq.find((x) => x.p.id === id)!;
+                onPay({ kind: 'wifi', packageId: id, amount: o.q.net, label: t('bills.wifiPlan', { n: o.p.months }) });
+              }}
+            />
           </div>
         </Card>
       )}

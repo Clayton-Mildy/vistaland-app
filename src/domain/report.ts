@@ -1,8 +1,8 @@
 import { addMonths, diffDays, monthOf } from './clock';
 import { BOARD_COLUMNS, isOverSla, isUnfinished } from './complaints';
 import { budgetVsActual, fuelReconciliation } from './finance';
-import { billStatus, firstBilledMonth } from './ipl';
-import type { AppData, Bill, I18nText, MonthKey } from './types';
+import { billStatus, firstBilledMonth, freeUntilMonth } from './ipl';
+import type { AppData, Bill, Consequence, I18nText, MonthKey, Unit } from './types';
 
 export type FollowTag = 'app' | 'rules' | 'ipl' | 'handover' | 'overdue' | 'sla' | 'lease';
 export interface FollowItem { tag: FollowTag; text: I18nText; link: string; weight: number }
@@ -167,4 +167,42 @@ export function monthlyReport(d: AppData, projectId: string, month: MonthKey) {
     compliance: { rulesSigned: d.units.filter((u) => unitIds.has(u.id) && u.occupancy === 'occupied' && u.rules).length, occupied: d.units.filter((u) => unitIds.has(u.id) && u.occupancy === 'occupied').length },
     followUp: needsFollowUp(d, projectId),
   };
+}
+
+export interface UnitBillingRow {
+  unit: Unit; ownerName: string; ownerPhone: string; renterName?: string; typeName: string; rate: number;
+  bills: Bill[]; overdueMonths: number; overdueAmount: number; oldestOverdue?: MonthKey; freeUntil?: MonthKey;
+  /** Arrears reached the project's flag threshold. Consequences are still applied by hand. */
+  needsAction: boolean;
+  activeConsequences: Consequence[];
+}
+
+/** One row per unit of the project, sorted by unit code, for the IPL list and the arrears table. */
+export function unitBillingRows(d: AppData, projectId: string): UnitBillingRow[] {
+  const s = d.projects.find((p) => p.id === projectId)!.settings;
+  const bills = billsByUnit(d, projectId);
+  return d.units
+    .filter((u) => u.projectId === projectId)
+    .map((unit) => {
+      const owner = d.vles.customers.find((c) => c.customer_id === unit.ownerCustomerId);
+      const type = d.unitTypes.find((t) => t.id === unit.typeId)!;
+      const ub = (bills.get(unit.id) ?? []).slice().sort((a, b) => a.month.localeCompare(b.month));
+      const overdue = ub.filter((b) => billStatus(b, d.today, s.ipl.dueDay) === 'overdue');
+      return {
+        unit,
+        ownerName: owner?.name ?? '',
+        ownerPhone: owner?.no_hp ?? '',
+        renterName: d.renters.find((r) => r.id === unit.renterId)?.name,
+        typeName: type.name,
+        rate: type.iplRate,
+        bills: ub,
+        overdueMonths: overdue.length,
+        overdueAmount: sum(overdue.map((b) => b.amount)),
+        oldestOverdue: overdue[0]?.month,
+        freeUntil: unit.handover.bastDate ? freeUntilMonth(unit.handover.bastDate, s.ipl) : undefined,
+        needsAction: overdue.length > 0 && overdue.length >= s.overdue.flagMonths,
+        activeConsequences: unit.consequences.filter((c) => !c.endedAt),
+      };
+    })
+    .sort((a, b) => a.unit.code.localeCompare(b.unit.code));
 }
