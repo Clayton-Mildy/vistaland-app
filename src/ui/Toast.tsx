@@ -1,5 +1,5 @@
 import { CheckCircle2, Info, XCircle } from 'lucide-react';
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { cx } from './cx';
 
 type Kind = 'success' | 'error' | 'info';
@@ -13,8 +13,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setItems((xs) => [...xs, { id, text, kind }]);
     setTimeout(() => setItems((xs) => xs.filter((x) => x.id !== id)), kind === 'info' ? 6000 : 3200);
   }, []);
+  // A stable value, so consumers can safely list the toast API in effect dependencies.
+  const value = useMemo(() => ({ show }), [show]);
   return (
-    <Ctx.Provider value={{ show }}>
+    <Ctx.Provider value={value}>
       {children}
       <div className="pointer-events-none fixed inset-x-0 top-3 z-[60] flex flex-col items-center gap-2 px-3">
         {items.map((t) => (
