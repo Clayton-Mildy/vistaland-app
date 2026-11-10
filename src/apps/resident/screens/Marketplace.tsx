@@ -4,15 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import type { Listing } from '../../../domain/types';
 import { useT } from '../../../i18n';
 import { useAccess, useData, useResident, useToday } from '../../../store/hooks';
-import { AppBar } from '../../../ui/AppBar';
-import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { cx } from '../../../ui/cx';
 import { EmptyState } from '../../../ui/EmptyState';
+import { Photo } from '../../../ui/Photo';
 import { StatusPill } from '../../../ui/StatusPill';
-import { Tabs } from '../../../ui/Tabs';
-import { TONES } from '../../../ui/theme';
 import { ago, isHouse, KIND_META, priceText } from '../listingMeta';
+import { listingThumb } from '../ui/media';
+import { ScreenBody } from '../ui/ScreenBody';
+import { ScreenHeader } from '../ui/ScreenHeader';
 
 type Tab = 'all' | 'house' | 'dijual' | 'dicari' | 'jasa';
 
@@ -30,23 +30,39 @@ export default function Marketplace() {
   const list = listings.filter(match);
   return (
     <div>
-      <AppBar back={false} title={t('market.title')} subtitle={t('market.subtitle', { project: ctx.project.name })} right={<Button size="sm" icon={<Plus className="h-4 w-4" />} onClick={() => nav('/app/market/new')}>{t('market.post')}</Button>} />
-      <div className="bg-white px-4"><Tabs value={tab} onChange={setTab} items={items} /></div>
-      <div className="space-y-2.5 p-4">
-        {list.length === 0 && <EmptyState title={t('market.empty')} />}
-        {list.map((l) => (
-          <Card key={l.id} interactive className="flex gap-3" onClick={() => nav(`/app/market/${l.id}`)}>
-            <span className={cx('flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-2xl font-extrabold', TONES[KIND_META[l.kind].tone])}>{l.title[0]}</span>
-            <div className="min-w-0 flex-1">
-              <StatusPill tone={KIND_META[l.kind].pill}>{t(`market.kind.${l.kind}`)}</StatusPill>
-              <p className="mt-0.5 line-clamp-2 text-sm font-bold leading-snug">{l.title}</p>
-              {l.price !== undefined && <p className="text-sm font-extrabold text-brand">{priceText(l, t)}</p>}
-              <p className="text-[11px] text-ink/45">{t('market.meta', { unit: units.find((u) => u.id === l.unitId)?.code ?? '', ago: ago(l.createdAt, today, t), n: l.replies })}</p>
-            </div>
-          </Card>
-        ))}
+      <ScreenHeader
+        back={false}
+        title={t('market.title')}
+        sub={t('market.subtitle', { project: ctx.project.name })}
+        right={<button onClick={() => nav('/app/market/new')} className="flex shrink-0 items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-ink hover:bg-white/90"><Plus className="h-3.5 w-3.5" />{t('market.post')}</button>}
+      >
+        <div className="no-scrollbar -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4" role="tablist">
+          {items.map((it) => (
+            <button key={it.value} role="tab" aria-selected={tab === it.value} onClick={() => setTab(it.value)} className={cx('shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition', tab === it.value ? 'bg-white text-ink' : 'bg-white/[0.14] text-white/85 hover:bg-white/20')}>{it.label}</button>
+          ))}
+        </div>
+      </ScreenHeader>
+      <ScreenBody>
+        {list.length === 0 && <Card><EmptyState title={t('market.empty')} /></Card>}
+        {list.map((l) => {
+          const unit = units.find((u) => u.id === l.unitId);
+          const thumb = listingThumb(l, unit);
+          return (
+            <Card key={l.id} interactive className="flex gap-3 p-3" onClick={() => nav(`/app/market/${l.id}`)}>
+              {'photoId' in thumb ? <Photo id={thumb.photoId} className="h-20 w-20 shrink-0 rounded-xl" /> : (
+                <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-paper text-brand-dark"><thumb.icon className="h-7 w-7" strokeWidth={1.5} /></span>
+              )}
+              <div className="min-w-0 flex-1 py-0.5">
+                <StatusPill tone={KIND_META[l.kind].pill}>{t(`market.kind.${l.kind}`)}</StatusPill>
+                <p className="mt-1 line-clamp-2 text-sm font-medium leading-snug">{l.title}</p>
+                {l.price !== undefined && <p className="text-sm font-semibold tabular text-brand-dark">{priceText(l, t)}</p>}
+                <p className="mt-0.5 text-xs text-ink/45">{t('market.meta', { unit: unit?.code ?? '', ago: ago(l.createdAt, today, t), n: l.replies })}</p>
+              </div>
+            </Card>
+          );
+        })}
         <p className="px-4 pt-2 text-center text-xs text-ink/45">{t('market.footer')}</p>
-      </div>
+      </ScreenBody>
     </div>
   );
 }

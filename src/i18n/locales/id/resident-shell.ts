@@ -51,6 +51,7 @@ export default {
   "onboarding.occupied.hint": "Tercatat otomatis saat security konfirmasi di gerbang",
   "onboarding.occupied.cta": "Lihat izin pindahan",
   "account.title": "Akun",
+  "account.version": "VHome · versi 1.0",
   "account.renterOf": "Penyewa · milik {owner}",
   "account.units": "Unit Anda",
   "account.switch": "Pilih",

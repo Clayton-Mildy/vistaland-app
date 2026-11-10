@@ -4,8 +4,6 @@ import type { Business } from '../../../domain/types';
 import { useT } from '../../../i18n';
 import { registerBusiness } from '../../../store/actions';
 import { useData, useResident, useRun } from '../../../store/hooks';
-import { AppBar } from '../../../ui/AppBar';
-import { Avatar } from '../../../ui/Avatar';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { Chip } from '../../../ui/Chip';
@@ -13,6 +11,8 @@ import { Field, Input, Select, Textarea } from '../../../ui/Field';
 import { Sheet } from '../../../ui/Sheet';
 import { StatusPill } from '../../../ui/StatusPill';
 import { useToast } from '../../../ui/Toast';
+import { ScreenBody } from '../ui/ScreenBody';
+import { ScreenHeader } from '../ui/ScreenHeader';
 
 const CATS: Business['category'][] = ['kuliner', 'jasa', 'toko', 'kesehatan', 'pendidikan'];
 
@@ -35,39 +35,41 @@ export default function Businesses() {
   };
   return (
     <div>
-      <AppBar title={t('biz.title', { project: ctx.project.name.split(' ')[0] })} right={<span className="pr-2 text-xs text-ink/45">{t('biz.count', { n: all.filter((b) => b.status === 'verified').length })}</span>} />
-      <div className="space-y-3 p-4">
-        <div className="flex h-11 items-center gap-2 rounded-xl border border-line bg-white px-3">
-          <Search className="h-4 w-4 text-ink/40" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('biz.search')} className="flex-1 bg-transparent text-sm outline-none" />
-        </div>
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-          <Chip active={cat === 'all'} onClick={() => setCat('all')}>{t('common.all')}</Chip>
-          {CATS.map((c) => <Chip key={c} active={cat === c} onClick={() => setCat(c)}>{t(`biz.cat.${c}`)}</Chip>)}
-        </div>
+      <ScreenHeader title={t('biz.title', { project: ctx.project.name.split(' ')[0] })} sub={t('biz.count', { n: all.filter((b) => b.status === 'verified').length })} />
+      <ScreenBody>
+        <Card className="space-y-3 p-3">
+          <div className="flex h-11 items-center gap-2 rounded-full border border-line bg-paper px-4">
+            <Search className="h-4 w-4 text-ink/40" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('biz.search')} className="min-w-0 flex-1 bg-transparent text-sm outline-none" />
+          </div>
+          <div className="no-scrollbar -mx-3 flex gap-2 overflow-x-auto px-3">
+            <Chip active={cat === 'all'} onClick={() => setCat('all')}>{t('common.all')}</Chip>
+            {CATS.map((c) => <Chip key={c} active={cat === c} onClick={() => setCat(c)}>{t(`biz.cat.${c}`)}</Chip>)}
+          </div>
+        </Card>
         {list.map((b) => (
           <Card key={b.id} className="flex gap-3">
-            <Avatar name={b.name} size={52} />
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-tint text-sm font-semibold text-brand-dark">{b.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}</span>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
-                <p className="font-bold">{b.name}</p>
+                <p className="font-semibold">{b.name}</p>
                 {b.status === 'pending' ? <StatusPill tone="warning">{t('biz.pending')}</StatusPill> : <StatusPill tone={b.open ? 'success' : 'neutral'}>{t(b.open ? 'biz.open' : 'biz.closed')}</StatusPill>}
               </div>
               <p className="text-xs text-ink/50">{t(`biz.cat.${b.category}`)} · {b.location}</p>
               <p className="mt-0.5 text-sm text-ink/70">{b.description}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <a href={`https://wa.me/${b.whatsapp}?text=${encodeURIComponent(t('biz.waText', { name: b.name }))}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl bg-[#1FA855] px-3 py-1.5 text-xs font-bold text-white"><MessageCircle className="h-3.5 w-3.5" />WhatsApp</a>
-                {b.hasVoucher && <StatusPill tone="gold">{t('biz.voucher')}</StatusPill>}
+                <a href={`https://wa.me/${b.whatsapp}?text=${encodeURIComponent(t('biz.waText', { name: b.name }))}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#1FA855] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#1A9049]"><MessageCircle className="h-3.5 w-3.5" />WhatsApp</a>
+                {b.hasVoucher && <span className="text-xs font-medium text-[#7A5600]">{t('biz.voucher')}</span>}
               </div>
             </div>
           </Card>
         ))}
-        <div className="rounded-2xl border-2 border-dashed border-brand/40 bg-brand-tint/40 p-4">
-          <p className="font-bold">{t('biz.ownTitle')}</p>
-          <p className="text-sm text-ink/60">{t('biz.ownBody')}</p>
-          <Button className="mt-3" onClick={() => setOpen(true)}>{t('biz.ownCta')}</Button>
-        </div>
-      </div>
+        <Card className="border-l-[3px] border-l-gold">
+          <p className="text-base font-semibold">{t('biz.ownTitle')}</p>
+          <p className="mt-0.5 text-sm text-ink/60">{t('biz.ownBody')}</p>
+          <Button className="mt-3" variant="secondary" onClick={() => setOpen(true)}>{t('biz.ownCta')}</Button>
+        </Card>
+      </ScreenBody>
       <Sheet open={open} onClose={() => setOpen(false)} title={t('biz.ownCta')} footer={<Button block onClick={submit}>{t('common.submit')}</Button>}>
         <div className="space-y-3">
           <Field label={t('biz.name')}><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>

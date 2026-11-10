@@ -1,4 +1,4 @@
-import { MapPin } from 'lucide-react';
+import { Gift, MapPin, PartyPopper } from 'lucide-react';
 import { useState } from 'react';
 import { PROJECT_SHOWCASE, type ShowcaseProject } from '../../../data/content';
 import type { Lead } from '../../../domain/types';
@@ -6,16 +6,16 @@ import { useT } from '../../../i18n';
 import { submitLead } from '../../../store/actions';
 import { useResident, useRun } from '../../../store/hooks';
 import { HOUSE_PHOTOS } from '../../../store/photos';
-import { AppBar } from '../../../ui/AppBar';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { Chip } from '../../../ui/Chip';
 import { Field, Input, Select } from '../../../ui/Field';
-import { Moni } from '../../../ui/Moni';
 import { Sheet } from '../../../ui/Sheet';
 import { StatusPill } from '../../../ui/StatusPill';
 import { useToast } from '../../../ui/Toast';
 import { useLocalized } from '../hooks';
+import { ScreenBody } from '../ui/ScreenBody';
+import { ScreenHeader } from '../ui/ScreenHeader';
 
 export default function Projects() {
   const t = useT();
@@ -37,39 +37,36 @@ export default function Projects() {
   };
   return (
     <div>
-      <AppBar title={t('feature.projects')} />
-      <div className="space-y-3 p-4">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#F97316] to-[#C2410C] p-4 text-white">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">Harmoni Fest 2026</p>
-          <p className="mt-1 max-w-[200px] text-xl font-extrabold leading-tight">{t('home.promo.fest')}</p>
-          <p className="mt-1 text-[11px] text-white/80">{t('projects.promoTerms')}</p>
-          <Moni pose="point" size={80} className="absolute -bottom-2 right-2" />
-        </div>
-        <div className="no-scrollbar flex gap-2 overflow-x-auto">
-          {(['all', 'Bekasi', 'Bogor', 'Serang'] as const).map((a) => <Chip key={a} active={area === a} onClick={() => setArea(a)}>{a === 'all' ? t('common.all') : a}</Chip>)}
-        </div>
+      <ScreenHeader title={t('feature.projects')} eyebrow="Harmoni Fest 2026" figure={t('home.promo.fest')} sub={t('projects.promoTerms')} />
+      <ScreenBody>
+        <Card className="flex items-center gap-3 p-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-dark"><PartyPopper className="h-5 w-5" strokeWidth={1.75} /></span>
+          <div className="no-scrollbar flex min-w-0 flex-1 gap-2 overflow-x-auto">
+            {(['all', 'Bekasi', 'Bogor', 'Serang'] as const).map((a) => <Chip key={a} active={area === a} onClick={() => setArea(a)}>{a === 'all' ? t('common.all') : a}</Chip>)}
+          </div>
+        </Card>
         {list.map((p) => (
           <Card key={p.name} className="overflow-hidden p-0">
             <div className="relative">
               <img src={HOUSE_PHOTOS[p.photo - 1]} alt="" className="h-40 w-full object-cover" />
-              {p.name === ctx.project.name ? <StatusPill tone="brand" className="absolute left-3 top-3 !bg-white">{t('projects.yours')}</StatusPill> : p.promo && <StatusPill tone="warning" className="absolute left-3 top-3 !bg-[#F97316] !text-white">Harmoni Fest</StatusPill>}
+              {p.name === ctx.project.name ? <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-medium text-ink">{t('projects.yours')}</span> : p.promo && <StatusPill tone="gold" className="absolute left-3 top-3">Harmoni Fest</StatusPill>}
             </div>
             <div className="p-4">
-              <p className="font-bold">{p.name}</p>
-              <p className="flex items-center gap-1 text-xs text-ink/55"><MapPin className="h-3.5 w-3.5 text-brand" />{p.location}</p>
+              <p className="text-base font-semibold">{p.name}</p>
+              <p className="flex items-center gap-1 text-xs text-ink/55"><MapPin className="h-3.5 w-3.5 text-brand-dark" />{p.location}</p>
               <p className="mt-1 text-xs text-ink/50">{L(p.blurb)}</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <a href={`https://www.google.com/maps/search/${encodeURIComponent(p.mapsQuery)}`} target="_blank" rel="noreferrer" className="flex h-10 items-center justify-center rounded-xl border border-brand/40 text-sm font-semibold text-brand-dark">{t('projects.location')}</a>
+                <a href={`https://www.google.com/maps/search/${encodeURIComponent(p.mapsQuery)}`} target="_blank" rel="noreferrer" className="flex h-10 items-center justify-center rounded-full border border-line text-sm font-medium text-ink hover:border-ink/25">{t('projects.location')}</a>
                 <Button onClick={() => setAsk(p)}>{t('projects.ask')}</Button>
               </div>
             </div>
           </Card>
         ))}
         <Card className="flex items-center gap-3">
-          <Moni pose="thumbs" size={48} />
-          <p className="text-sm"><b>{t('projects.referTitle')}</b><br /><span className="text-ink/55">{t('projects.referBody')}</span></p>
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-dark"><Gift className="h-5 w-5" strokeWidth={1.75} /></span>
+          <p className="text-sm"><span className="font-semibold">{t('projects.referTitle')}</span><br /><span className="text-ink/55">{t('projects.referBody')}</span></p>
         </Card>
-      </div>
+      </ScreenBody>
       <Sheet open={!!ask} onClose={() => setAsk(null)} title={t('projects.askTitle', { name: ask?.name ?? '' })} footer={<Button block onClick={send}>{t('projects.send')}</Button>}>
         <div className="space-y-3">
           <Field label={t('wizard.name')}><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>

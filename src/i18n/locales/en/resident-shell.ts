@@ -51,6 +51,7 @@ export default {
   "onboarding.occupied.hint": "Recorded when security confirms at the gate",
   "onboarding.occupied.cta": "See move-in permit",
   "account.title": "Account",
+  "account.version": "VHome · version 1.0",
   "account.renterOf": "Renter · owned by {owner}",
   "account.units": "Your units",
   "account.switch": "Switch",

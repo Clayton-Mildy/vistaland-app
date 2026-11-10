@@ -7,7 +7,6 @@ import { postListing } from '../../../store/actions';
 import { useAccess, useData, useResident, useRun } from '../../../store/hooks';
 import { HOUSE_PHOTOS } from '../../../store/photos';
 import { useStore } from '../../../store/store';
-import { AppBar } from '../../../ui/AppBar';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { Chip } from '../../../ui/Chip';
@@ -18,6 +17,8 @@ import { Photo } from '../../../ui/Photo';
 import { PhotoPicker } from '../../../ui/PhotoPicker';
 import { useToast } from '../../../ui/Toast';
 import { isHouse } from '../listingMeta';
+import { ScreenBody } from '../ui/ScreenBody';
+import { ScreenHeader } from '../ui/ScreenHeader';
 
 export default function ListingPost() {
   const t = useT();
@@ -56,30 +57,33 @@ export default function ListingPost() {
     const url = `${location.origin}/listing/${posted}`;
     return (
       <div>
-        <AppBar title={t('post.title')} />
-        <div className="flex flex-col items-center p-6 text-center">
-          <Moni pose="thumbs" size={100} />
-          <h2 className="mt-3 text-xl font-bold">{t('post.liveTitle')}</h2>
-          <p className="mt-1 text-sm text-ink/60">{t('post.liveBody')}</p>
-          <Card className="mt-4 w-full text-left">
+        <ScreenHeader title={t('post.title')} />
+        <ScreenBody>
+          <Card className="flex flex-col items-center px-6 py-8 text-center">
+            <Moni pose="thumbs" size={88} />
+            <h2 className="mt-3 text-xl font-semibold">{t('post.liveTitle')}</h2>
+            <p className="mt-1 text-sm text-ink/60">{t('post.liveBody')}</p>
+          </Card>
+          <Card>
             <p className="text-xs text-ink/50">{t('post.publicLink')}</p>
-            <p className="mt-1 break-all font-mono text-sm font-semibold">{url}</p>
+            <p className="mt-1 break-all text-sm font-medium">{url}</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <Button variant="secondary" icon={<Copy className="h-4 w-4" />} onClick={() => { void navigator.clipboard?.writeText(url); toast.show(t('common.copied')); }}>{t('common.copy')}</Button>
-              <a href={url} target="_blank" rel="noreferrer" className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand text-sm font-semibold text-white"><ExternalLink className="h-4 w-4" />{t('common.open')}</a>
+              <a href={url} target="_blank" rel="noreferrer" className="flex h-11 items-center justify-center gap-2 rounded-full bg-brand-dark text-sm font-medium text-white hover:bg-brand"><ExternalLink className="h-4 w-4" />{t('common.open')}</a>
             </div>
           </Card>
-          <Button className="mt-4" variant="ghost" onClick={() => nav(`/app/market/${posted}`, { replace: true })}>{t('post.viewListing')}</Button>
-        </div>
+          <Button block variant="ghost" onClick={() => nav(`/app/market/${posted}`, { replace: true })}>{t('post.viewListing')}</Button>
+        </ScreenBody>
       </div>
     );
   }
   return (
     <div>
-      <AppBar title={t('post.title')} />
-      <div className="space-y-3 p-4">
+      <ScreenHeader title={t('post.title')} eyebrow={ctx.project.name} />
+      <ScreenBody>
+        <Card className="space-y-3">
         <div className="flex flex-wrap gap-2">{kinds.map((k) => <Chip key={k} active={kind === k} onClick={() => pick(k)}>{t(`market.kind.${k}`)}</Chip>)}</div>
-        {isHouse(kind) && <p className="rounded-xl bg-brand-tint/50 p-3 text-xs text-brand-dark">{t('post.houseNote')}</p>}
+        {isHouse(kind) && <p className="rounded-xl bg-paper p-3 text-xs text-ink/60">{t('post.houseNote')}</p>}
         {isHouse(kind) && myUnits.length > 1 && (
           <Field label={t('post.whichUnit')}>
             <Select value={listUnit} onChange={(e) => { setListUnit(e.target.value); const u = myUnits.find((x) => x.id === e.target.value); if (u) setTitle(t(kind === 'rumahDisewakan' ? 'post.houseRentTitle' : 'post.houseSellTitle', { unit: u.code, type: typeName(u.id) })); }}>
@@ -87,6 +91,7 @@ export default function ListingPost() {
             </Select>
           </Field>
         )}
+        </Card>
         <Card className="space-y-3">
           <Field label={t('post.fTitle')}><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('post.titlePh')} /></Field>
           {kind !== 'info' && (
@@ -97,16 +102,16 @@ export default function ListingPost() {
           )}
           <Field label={t('post.desc')}><Textarea value={desc} onChange={(e) => setDesc(e.target.value)} /></Field>
           <div>
-            <p className="mb-1.5 text-xs font-semibold text-ink/70">{t('post.photo')}</p>
+            <p className="mb-1.5 text-xs font-medium text-ink/70">{t('post.photo')}</p>
             {photo ? <Photo id={photo} className="h-36 rounded-xl" /> : isHouse(kind) ? (
               <div className="grid grid-cols-5 gap-1.5">
-                {HOUSE_PHOTOS.map((src, i) => <button key={src} onClick={() => setPhoto(`house:${i + 1}`)} className={cx('overflow-hidden rounded-lg ring-2', photo === `house:${i + 1}` ? 'ring-brand' : 'ring-transparent')}><img src={src} alt="" className="h-12 w-full object-cover" /></button>)}
+                {HOUSE_PHOTOS.map((src, i) => <button key={src} onClick={() => setPhoto(`house:${i + 1}`)} className={cx('overflow-hidden rounded-xl ring-2', photo === `house:${i + 1}` ? 'ring-brand' : 'ring-transparent')}><img src={src} alt="" className="h-12 w-full object-cover" /></button>)}
               </div>
             ) : <PhotoPicker onPicked={(p) => setPhoto(p.id)} />}
           </div>
         </Card>
         <Button block size="lg" disabled={!title.trim()} onClick={submit}>{t('post.submit')}</Button>
-      </div>
+      </ScreenBody>
     </div>
   );
 }

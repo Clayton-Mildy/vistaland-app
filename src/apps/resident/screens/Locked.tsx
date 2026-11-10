@@ -1,11 +1,13 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { AccessReason } from '../../../domain/access';
+import type { ResidentFeature } from '../../../domain/types';
 import { useT } from '../../../i18n';
 import { useAccess } from '../../../store/hooks';
-import type { ResidentFeature } from '../../../domain/types';
-import { AppBar } from '../../../ui/AppBar';
 import { Button } from '../../../ui/Button';
+import { Card } from '../../../ui/Card';
 import { Moni } from '../../../ui/Moni';
+import { ScreenBody } from '../ui/ScreenBody';
+import { ScreenHeader } from '../ui/ScreenHeader';
 
 const CTA: Partial<Record<AccessReason, string>> = { notOccupied: '/app/move-in', noBast: '/app/handover' };
 
@@ -18,17 +20,16 @@ export default function Locked() {
   const cta = CTA[reason];
   return (
     <div>
-      <AppBar title={t(`feature.${feature}`)} />
-      <div className="flex flex-col items-center px-8 pt-10 text-center">
-        <div className="relative">
-          <Moni pose="crossed" size={130} />
-          <span className="absolute -right-24 top-3 max-w-[140px] rounded-2xl rounded-bl-md bg-brand-tint px-3 py-2 text-left text-xs font-semibold text-brand-dark">{t('locked.bubble')}</span>
-        </div>
-        <h2 className="mt-5 text-xl font-bold">{t(`locked.title.${reason}`)}</h2>
-        <p className="mt-2 text-sm text-ink/55">{t(`locked.body.${reason}`)}</p>
-        {cta && <Button className="mt-6" onClick={() => nav(cta)}>{t(`locked.cta.${reason}`)}</Button>}
-        <Button className="mt-2" variant="ghost" onClick={() => nav('/app/home')}>{t('locked.home')}</Button>
-      </div>
+      <ScreenHeader title={t(`feature.${feature}`)} />
+      <ScreenBody>
+        <Card className="flex flex-col items-center px-6 py-8 text-center">
+          <Moni pose="crossed" size={110} />
+          <h2 className="mt-4 text-xl font-semibold">{t(`locked.title.${reason}`)}</h2>
+          <p className="mt-2 text-sm text-ink/55">{t(`locked.body.${reason}`)}</p>
+          {cta && <Button className="mt-6" onClick={() => nav(cta)}>{t(`locked.cta.${reason}`)}</Button>}
+          <Button className="mt-2" variant="ghost" onClick={() => nav('/app/home')}>{t('locked.home')}</Button>
+        </Card>
+      </ScreenBody>
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { formatDate } from '../../../domain/clock';
 import { useLang, useT } from '../../../i18n';
 import { sendFeedback } from '../../../store/actions';
 import { useData, useResident, useRun } from '../../../store/hooks';
-import { AppBar } from '../../../ui/AppBar';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { Chip } from '../../../ui/Chip';
@@ -14,6 +13,8 @@ import { Photo } from '../../../ui/Photo';
 import { PhotoPicker } from '../../../ui/PhotoPicker';
 import { StatusPill } from '../../../ui/StatusPill';
 import { useToast } from '../../../ui/Toast';
+import { ScreenBody } from '../ui/ScreenBody';
+import { ScreenHeader } from '../ui/ScreenHeader';
 
 const TOPICS: FB['topic'][] = ['saran', 'kebersihan', 'keamanan', 'fasilitas', 'lainnya'];
 
@@ -39,41 +40,40 @@ export default function Feedback() {
   };
   return (
     <div>
-      <AppBar title={t('feature.feedback')} />
-      <div className="space-y-3 p-4">
+      <ScreenHeader title={t('feature.feedback')} sub={t('feedback.intro', { project: ctx.project.name })} />
+      <ScreenBody>
         <Card className="space-y-3">
-          <p className="text-sm text-ink/65">{t('feedback.intro', { project: ctx.project.name })}</p>
           <div>
-            <p className="mb-1.5 text-xs font-semibold text-ink/60">{t('feedback.topic')}</p>
+            <p className="mb-1.5 text-xs font-medium text-ink/60">{t('feedback.topic')}</p>
             <div className="flex flex-wrap gap-2">{TOPICS.map((k) => <Chip key={k} active={topic === k} onClick={() => setTopic(k)}>{t(`feedback.t.${k}`)}</Chip>)}</div>
           </div>
           <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={t('feedback.placeholder')} />
           {photo ? <Photo id={photo} className="h-28 rounded-xl" /> : showPhoto ? <PhotoPicker onPicked={(p) => setPhoto(p.id)} /> : <Button size="sm" variant="secondary" onClick={() => setShowPhoto(true)}>{t('feedback.attach')}</Button>}
           <Button block size="lg" onClick={send}>{t('feedback.send')}</Button>
-          <p className="text-[11px] text-ink/45">{t('feedback.private')}</p>
+          <p className="text-xs text-ink/45">{t('feedback.private')}</p>
         </Card>
-        <div className="flex items-center justify-between rounded-2xl border border-[#F5C9A8] bg-[#FFF3EA] p-3">
-          <span className="text-sm"><b className="text-[#9A3412]">{t('feedback.urgent')}</b><br /><span className="text-xs text-[#9A3412]/80">{t('feedback.urgentBody')}</span></span>
-          <a href="tel:081210002001" className="flex items-center gap-1.5 rounded-xl bg-[#9A3412] px-3 py-2 text-sm font-bold text-white"><Phone className="h-4 w-4" />{t('common.call')}</a>
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#F3D9A4] bg-[#FFF8E8] p-4">
+          <span className="text-sm"><span className="font-semibold text-[#8A5A00]">{t('feedback.urgent')}</span><br /><span className="text-xs text-[#8A5A00]/80">{t('feedback.urgentBody')}</span></span>
+          <a href="tel:081210002001" className="flex shrink-0 items-center gap-1.5 rounded-full border border-[#8A5A00]/40 px-3.5 py-2 text-sm font-medium text-[#8A5A00] hover:bg-white"><Phone className="h-4 w-4" />{t('common.call')}</a>
         </div>
         {mine.length > 0 && (
           <Card className="p-0">
-            <p className="px-4 pb-1 pt-4 font-bold">{t('feedback.mine')}</p>
+            <p className="px-4 pb-1 pt-4 text-base font-semibold">{t('feedback.mine')}</p>
             <ul className="divide-y divide-line">
               {mine.map((f) => (
                 <li key={f.id} className="px-4 py-3">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-sm font-semibold">{f.text}</span>
+                    <span className="text-sm font-medium">{f.text}</span>
                     <StatusPill tone={f.status === 'replied' ? 'success' : f.status === 'read' ? 'neutral' : 'info'}>{t(`feedback.s.${f.status}`)}</StatusPill>
                   </div>
-                  <p className="text-[11px] text-ink/45">{t(`feedback.t.${f.topic}`)} · {formatDate(f.createdAt.slice(0, 10), lang)}</p>
-                  {f.reply && <p className="mt-2 rounded-xl bg-paper p-2.5 text-xs text-ink/70"><b>{t('feedback.estate')}</b> {f.reply}</p>}
+                  <p className="text-xs text-ink/45">{t(`feedback.t.${f.topic}`)} · {formatDate(f.createdAt.slice(0, 10), lang)}</p>
+                  {f.reply && <p className="mt-2 rounded-xl border-l-[3px] border-l-gold bg-paper p-2.5 text-xs text-ink/70"><span className="font-semibold">{t('feedback.estate')}</span> {f.reply}</p>}
                 </li>
               ))}
             </ul>
           </Card>
         )}
-      </div>
+      </ScreenBody>
     </div>
   );
 }

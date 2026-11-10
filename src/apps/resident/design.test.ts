@@ -50,6 +50,20 @@ export const REFRESHED: string[] = [
   'src/apps/resident/screens/Legal.tsx',
   'src/apps/resident/screens/Emergency.tsx',
   'src/apps/resident/screens/Cctv.tsx',
+  // Task 10
+  'src/apps/resident/screens/Marketplace.tsx',
+  'src/apps/resident/screens/ListingDetail.tsx',
+  'src/apps/resident/screens/ListingPost.tsx',
+  'src/apps/resident/screens/Vouchers.tsx',
+  'src/apps/resident/screens/Businesses.tsx',
+  'src/apps/resident/screens/Projects.tsx',
+  'src/apps/resident/screens/Handbook.tsx',
+  'src/apps/resident/screens/Feedback.tsx',
+  'src/apps/resident/screens/Account.tsx',
+  'src/apps/resident/screens/Notifications.tsx',
+  'src/apps/resident/screens/Locked.tsx',
+  'src/apps/resident/ComingSoon.tsx',
+  'src/apps/resident/listingMeta.ts',
 ];
 
 const RULES: [string, RegExp][] = [

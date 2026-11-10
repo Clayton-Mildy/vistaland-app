@@ -18,3 +18,13 @@ test('a listing shows its own photo, else the house photo for homes, else a cate
   const jasa = listingThumb(listing('jasa'), unit);
   expect('icon' in jasa && jasa.icon).toBeTruthy();
 });
+
+test('every listing kind has a category icon, used when a non-house listing has no photo', async () => {
+  const { KIND_META } = await import('../listingMeta');
+  const kinds: Listing['kind'][] = ['dijual', 'dicari', 'jasa', 'info', 'rumahDisewakan', 'rumahDijual'];
+  expect(Object.keys(KIND_META).sort()).toEqual([...kinds].sort());
+  for (const k of kinds) {
+    expect(KIND_META[k].icon).toBeTruthy();
+    if (k !== 'rumahDisewakan' && k !== 'rumahDijual') expect(listingThumb(listing(k))).toEqual({ icon: KIND_META[k].icon });
+  }
+});
