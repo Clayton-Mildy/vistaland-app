@@ -21,14 +21,14 @@ export function PrepayGrid({ packages, rate, selectedId, onSelect }: { packages:
   return (
     <div className="grid grid-cols-2 gap-2">
       {quotes.map(({ p, q }) => (
-        <button key={p.id} type="button" onClick={() => onSelect?.(p.id)} className={cx('relative rounded-2xl border p-3 text-left transition', selectedId === p.id ? 'border-brand bg-brand-tint/50 ring-2 ring-brand/15' : 'border-line bg-white')}>
-          {best && best.p.id === p.id && q.discount > 0 && <StatusPill tone="brand" className="mb-1">{t('bills.best')}</StatusPill>}
+        <button key={p.id} type="button" onClick={() => onSelect?.(p.id)} className={cx('relative rounded-2xl border p-3 text-left transition', selectedId === p.id ? 'border-brand bg-white ring-2 ring-brand/20' : 'border-line bg-white hover:border-ink/25')}>
+          {best && best.p.id === p.id && q.discount > 0 && <StatusPill tone="gold" className="mb-1">{t('bills.best')}</StatusPill>}
           {p.discountType === 'percent' && p.value > 0 && best?.p.id !== p.id && <StatusPill tone="success" className="mb-1">{t('home.discountPct', { n: p.value })}</StatusPill>}
           {p.discountType === 'freeMonths' && p.value > 0 && best?.p.id !== p.id && <StatusPill tone="success" className="mb-1">{t('home.freeMonths', { n: p.value })}</StatusPill>}
-          <span className="block text-sm font-bold">{t('bills.nMonths', { n: p.months })}</span>
-          <span className="block text-base font-extrabold text-brand">{formatRp(q.net)}</span>
-          <span className="block text-[11px] text-ink/50">≈ {formatRp(Math.round(q.net / p.months))}{t('common.perMonth')}</span>
-          {q.discount > 0 && <span className="block text-[11px] font-bold text-[#17703D]">{t('bills.save', { amount: formatRp(q.discount) })}</span>}
+          <span className="block text-sm font-medium text-ink/70">{t('bills.nMonths', { n: p.months })}</span>
+          <span className="mt-0.5 block text-base font-semibold tabular text-ink">{formatRp(q.net)}</span>
+          <span className="block text-xs tabular text-ink/50">≈ {formatRp(Math.round(q.net / p.months))}{t('common.perMonth')}</span>
+          {q.discount > 0 && <span className="mt-1 block text-xs font-medium text-[#17703D]">{t('bills.save', { amount: formatRp(q.discount) })}</span>}
         </button>
       ))}
     </div>

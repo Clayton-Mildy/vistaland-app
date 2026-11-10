@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import type { ResidentFeature } from '../../../domain/types';
 import { useT } from '../../../i18n';
 import { useAccess } from '../../../store/hooks';
+import { Card } from '../../../ui/Card';
 import { IconTile } from '../../../ui/IconTile';
+import { Section } from '../../../ui/Section';
 import { useComplaintWindowState } from '../hooks';
 
 type Group = 'home' | 'security' | 'community';
@@ -49,14 +51,13 @@ export function MenuGrid({ groups = ['home', 'security', 'community'] }: { group
   const state = useMenuState();
   const win = useComplaintWindowState();
   return (
-    <div className="space-y-5">
+    <>
       {groups.map((g) => {
         const items = MENU.filter((m) => m.group === g && state(m) !== 'hidden');
         if (!items.length) return null;
         return (
-          <div key={g}>
-            <h3 className="mb-3 px-1 text-[13px] font-bold text-ink/70">{t(`menu.group.${g}`)}</h3>
-            <div className="grid grid-cols-5 gap-x-1 gap-y-4">
+          <Section key={g} title={t(`menu.group.${g}`)}>
+            <Card className="grid grid-cols-4 gap-x-2 gap-y-4 px-3 py-4">
               {items.map((m) => (
                 <IconTile
                   key={m.key}
@@ -67,10 +68,10 @@ export function MenuGrid({ groups = ['home', 'security', 'community'] }: { group
                   onClick={() => nav(m.route)}
                 />
               ))}
-            </div>
-          </div>
+            </Card>
+          </Section>
         );
       })}
-    </div>
+    </>
   );
 }

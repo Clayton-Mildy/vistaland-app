@@ -7,15 +7,14 @@ import { useDerived, useResident } from '../../../store/hooks';
 import { Card } from '../../../ui/Card';
 import { cx } from '../../../ui/cx';
 import { Section } from '../../../ui/Section';
-import { StatusPill, type PillTone } from '../../../ui/StatusPill';
 import { useIplSummary } from '../hooks';
 
 function Mini({ label, value, sub, tone, onClick, icon: Icon }: { label: string; value: string; sub: string; tone?: 'danger' | 'success' | 'brand'; onClick: () => void; icon: typeof Receipt }) {
   return (
-    <button onClick={onClick} className="min-w-0 rounded-2xl border border-line/80 bg-white p-2.5 text-left shadow-card">
-      <span className="flex items-center gap-1 text-[10.5px] font-semibold text-ink/50"><Icon className="h-3 w-3" />{label}</span>
-      <span className={cx('mt-0.5 block truncate text-[13px] font-bold', tone === 'danger' && 'text-[#B4192A]', tone === 'success' && 'text-[#17703D]', tone === 'brand' && 'text-brand')}>{value}</span>
-      <span className="block truncate text-[10.5px] font-semibold text-brand">{sub}</span>
+    <button onClick={onClick} className="min-w-0 px-2.5 py-3 text-left transition hover:bg-paper/60">
+      <span className="flex items-center gap-1 truncate text-xs text-ink/55"><Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />{label}</span>
+      <span className={cx('mt-1 line-clamp-2 block text-sm font-semibold leading-snug tabular', tone === 'danger' && 'text-[#B4192A]', tone === 'success' && 'text-[#17703D]', tone === 'brand' && 'text-brand-dark')}>{value}</span>
+      <span className="mt-0.5 block truncate text-xs font-medium text-brand">{sub}</span>
     </button>
   );
 }
@@ -55,21 +54,21 @@ export function CardsStatus() {
   return <Mini icon={CreditCard} label={t('status.cards.label')} tone={ready ? 'brand' : undefined} value={value} sub={orders.length ? t('common.detail') : t('status.cards.claim')} onClick={() => nav('/app/cards')} />;
 }
 
-const TAG_TONE: Record<string, PillTone> = { jadwal: 'info', info: 'success', penting: 'danger' };
 export function Announcements() {
   const t = useT();
   const [lang] = useLang();
   const ctx = useResident()!;
   const list = useDerived((d) => d.announcements.filter((a) => a.projectId === ctx.project.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 4), [ctx.project.id]);
   return (
-    <Section title={<span className="flex items-center gap-2"><Megaphone className="h-4 w-4 text-brand" />{t('home.announcements')}</span>}>
+    <Section title={<span className="flex items-center gap-2"><Megaphone className="h-4 w-4 text-brand-dark" strokeWidth={1.75} />{t('home.announcements')}</span>}>
       <Card className="divide-y divide-line p-0">
         {list.map((a) => (
-          <div key={a.id} className="flex items-start gap-3 px-4 py-3">
-            <StatusPill tone={TAG_TONE[a.tag]}>{t(`announce.${a.tag}`)}</StatusPill>
+          <div key={a.id} className="flex items-stretch gap-3 px-4 py-3">
+            <span className={cx('w-[3px] shrink-0 rounded-full', a.tag === 'penting' ? 'bg-brand' : 'bg-gold')} aria-hidden />
             <div className="min-w-0">
-              <p className="text-sm font-semibold leading-snug">{a.title}</p>
-              <p className="text-xs text-ink/50">{formatDate(a.date, lang, 'weekday')} · {a.body}</p>
+              <p className="text-xs font-medium uppercase tracking-[0.08em] text-ink/45">{t(`announce.${a.tag}`)} · {formatDate(a.date, lang, 'weekday')}</p>
+              <p className="mt-0.5 text-sm font-semibold leading-snug">{a.title}</p>
+              <p className="mt-0.5 text-xs text-ink/55">{a.body}</p>
             </div>
           </div>
         ))}

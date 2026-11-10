@@ -11,6 +11,7 @@ import { useDashboardProject, useDerived, useRun } from '../../../store/hooks';
 import { Button } from '../../../ui/Button';
 import { cx } from '../../../ui/cx';
 import { DataTable } from '../../../ui/DataTable';
+import { UiFlavor } from '../../../ui/flavor';
 import { Checkbox, Field, Input, Select } from '../../../ui/Field';
 import { Kpi } from '../../../ui/Kpi';
 import { Segmented } from '../../../ui/Segmented';
@@ -150,7 +151,7 @@ export default function Prepay() {
               {expired || !previewPackages.length ? (
                 <p className="py-4 text-center text-xs text-ink/50">{t(expired ? 'bills.prepayExpired' : 'dash.prepay.nonePreview')}</p>
               ) : (
-                <PrepayGrid packages={previewPackages} rate={rate} />
+                <UiFlavor value="premium"><PrepayGrid packages={previewPackages} rate={rate} /></UiFlavor>
               )}
             </div>
             <p className="mt-2 text-center text-[10px] text-ink/45">{t('dash.prepay.previewRate', { rate: formatRp(rate) })}</p>

@@ -20,6 +20,11 @@ export const REFRESHED: string[] = [
   'src/apps/resident/auth/Otp.tsx',
   'src/apps/resident/auth/UnitPicker.tsx',
   'src/apps/resident/auth/Welcome.tsx',
+  // Task 4
+  'src/apps/resident/home/CommercialHome.tsx',
+  'src/apps/resident/home/OnboardingCard.tsx',
+  'src/apps/resident/home/StatusCards.tsx',
+  'src/apps/resident/PrepayGrid.tsx',
 ];
 
 const RULES: [string, RegExp][] = [
