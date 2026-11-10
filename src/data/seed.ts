@@ -383,6 +383,7 @@ export function buildSeed(): AppData {
     { id: 'GRP-0004', projectId: 'vh', category: 'cat', refs: [{ complaintId: 'KMP-0142', findingId: 'f-142-3' }], material: 'Cat eksterior 5 kg, plamir', estimateDays: 1, mandorId: 'st-mandor', createdAt: ts('2026-10-16') },
   );
   seq.KMP = 147;
+  seq.r = 2;
   seq.GRP = 4;
 
   // Community, security and announcements -------------------------------------

@@ -64,7 +64,7 @@ export interface RenterRegistration {
   id: string; unitId: string; ownerCustomerId: number; type: 'renter' | 'newOwner';
   person: { name: string; no_ktp: string; no_hp: string; householdSize: number };
   lease?: { start: ISODate; end: ISODate }; leaseDocPhotoId?: string; ajbDate?: ISODate; vehicles: Vehicle[];
-  moveIn: { date: ISODate; time: string }; iplPayer: 'owner' | 'renter'; fee: number; feePaid: boolean;
+  moveIn: { date: ISODate; time: string }; iplPayer: 'owner' | 'renter'; cards?: number; fee: number; feePaid: boolean;
   status: 'submitted' | 'needsFix' | 'approved' | 'rejected'; reviewNote?: string; createdAt: ISODateTime; renterId?: string;
 }
 export type ResidentIdentity = { kind: 'owner'; customerId: number } | { kind: 'renter'; renterId: string };
