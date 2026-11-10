@@ -7,13 +7,14 @@ import { useLang, useT } from '../../../i18n';
 import { orderCards, payCardOrder } from '../../../store/actions';
 import { useData, useResident, useRun } from '../../../store/hooks';
 import { useStore } from '../../../store/store';
-import { AppBar } from '../../../ui/AppBar';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { Field, Input } from '../../../ui/Field';
 import { Segmented } from '../../../ui/Segmented';
 import { StatusPill, type PillTone } from '../../../ui/StatusPill';
 import { useToast } from '../../../ui/Toast';
+import { ScreenBody } from '../ui/ScreenBody';
+import { ScreenHeader } from '../ui/ScreenHeader';
 import { PaySheet } from './PaySheet';
 
 const STATUS_TONE: Record<string, PillTone> = { awaitingPayment: 'warning', toMake: 'info', ready: 'success', pickedUp: 'neutral' };
@@ -21,9 +22,9 @@ const STATUS_TONE: Record<string, PillTone> = { awaitingPayment: 'warning', toMa
 function Stepper({ value, onChange, max }: { value: number; onChange: (n: number) => void; max: number }) {
   return (
     <div className="flex items-center gap-2">
-      <button onClick={() => onChange(Math.max(0, value - 1))} className="flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-white"><Minus className="h-4 w-4" /></button>
-      <span className="w-6 text-center font-bold tabular">{value}</span>
-      <button onClick={() => onChange(Math.min(max, value + 1))} className="flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-white"><Plus className="h-4 w-4" /></button>
+      <button onClick={() => onChange(Math.max(0, value - 1))} className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white hover:border-ink/25"><Minus className="h-4 w-4" /></button>
+      <span className="w-6 text-center font-semibold tabular">{value}</span>
+      <button onClick={() => onChange(Math.min(max, value + 1))} className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white hover:border-ink/25"><Plus className="h-4 w-4" /></button>
     </div>
   );
 }
@@ -62,36 +63,36 @@ export default function Cards() {
 
   return (
     <div>
-      <AppBar title={t('cards.title')} />
-      <div className="space-y-3 p-4">
+      <ScreenHeader title={t('cards.title')} eyebrow={`Unit ${ctx.unit.code}`} />
+      <ScreenBody>
         {!freeUsed && (
-          <Card className="border-brand/40 ring-2 ring-brand/10">
-            <div className="flex items-center justify-between">
-              <span className="font-bold">{t('cards.freeTitle')}</span>
-              <StatusPill tone="brand">{t('status.free').toUpperCase()}</StatusPill>
+          <Card>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-base font-semibold">{t('cards.freeTitle')}</span>
+              <StatusPill tone="gold">{t('status.free')}</StatusPill>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <div className="flex items-center gap-2 rounded-xl bg-brand-tint/60 p-2.5"><CreditCard className="h-5 w-5 text-[#6B4FD8]" /><span className="text-xs"><b>{t('cards.nCards', { n: c.freeCards })}</b><br />{t('cards.cardsUse')}</span></div>
-              <div className="flex items-center gap-2 rounded-xl bg-brand-tint/60 p-2.5"><Sticker className="h-5 w-5 text-[#1F8A4C]" /><span className="text-xs"><b>{t('cards.nStickers', { n: c.freeStickers })}</b><br />{t('cards.stickersUse')}</span></div>
+              <div className="flex items-center gap-2.5 rounded-xl bg-paper p-2.5"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand-dark"><CreditCard className="h-[18px] w-[18px]" strokeWidth={1.75} /></span><span className="text-xs leading-snug"><span className="block font-semibold">{t('cards.nCards', { n: c.freeCards })}</span>{t('cards.cardsUse')}</span></div>
+              <div className="flex items-center gap-2.5 rounded-xl bg-paper p-2.5"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand-dark"><Sticker className="h-[18px] w-[18px]" strokeWidth={1.75} /></span><span className="text-xs leading-snug"><span className="block font-semibold">{t('cards.nStickers', { n: c.freeStickers })}</span>{t('cards.stickersUse')}</span></div>
             </div>
-            <p className="mt-3 text-xs font-semibold text-ink/60">{t('cards.vehicleFor')}</p>
+            <p className="mt-4 text-xs font-medium text-ink/60">{t('cards.vehicleFor')}</p>
             <Segmented className="mt-1.5 w-full" value={type} onChange={setType} items={[{ value: 'mobil', label: t('cards.car') }, { value: 'motor', label: t('cards.motor') }]} />
             <Field className="mt-3" label={t('movein.plate')}><Input placeholder="B 1234 XYZ" value={plate} onChange={(e) => setPlate(e.target.value.toUpperCase())} /></Field>
             <Button className="mt-3" block size="lg" onClick={claimFree}>{t('cards.claimFree')}</Button>
-            <p className="mt-2 text-[11px] text-ink/45">{t('cards.freeNote')}</p>
+            <p className="mt-2 text-xs text-ink/45">{t('cards.freeNote')}</p>
           </Card>
         )}
 
         <Card>
-          <p className="font-bold">{t('cards.moreTitle')}</p>
+          <p className="text-base font-semibold">{t('cards.moreTitle')}</p>
           <p className="text-xs text-ink/50">{t('cards.moreBody')}</p>
           <div className="mt-3 space-y-3">
             <div className="flex items-center justify-between">
-              <span><span className="block text-sm font-semibold">{t('cards.extraSticker')}</span><span className="text-xs text-ink/50">{formatRp(c.extraStickerPrice)}/{t('cards.perSticker')}</span></span>
+              <span><span className="block text-sm font-medium">{t('cards.extraSticker')}</span><span className="text-xs text-ink/50">{formatRp(c.extraStickerPrice)}/{t('cards.perSticker')}</span></span>
               <Stepper value={stickers} onChange={setStickers} max={5} />
             </div>
             <div className="flex items-center justify-between">
-              <span><span className="block text-sm font-semibold">{t('cards.extraCard')}</span><span className="text-xs text-ink/50">{t('cards.maxN', { n: c.maxExtraCards })} · {formatRp(c.extraCardPrice)}/{t('cards.perCard')}</span></span>
+              <span><span className="block text-sm font-medium">{t('cards.extraCard')}</span><span className="text-xs text-ink/50">{t('cards.maxN', { n: c.maxExtraCards })} · {formatRp(c.extraCardPrice)}/{t('cards.perCard')}</span></span>
               <Stepper value={cards} onChange={setCards} max={c.maxExtraCards} />
             </div>
             {freeUsed && stickers > 0 && (
@@ -101,8 +102,8 @@ export default function Cards() {
               </div>
             )}
             <div className="flex items-center justify-between border-t border-line pt-3">
-              <span className="font-semibold">{t('common.total')}</span>
-              <span className="text-lg font-extrabold tabular">{formatRp(total)}</span>
+              <span className="text-sm text-ink/60">{t('common.total')}</span>
+              <span className="text-lg font-semibold tabular">{formatRp(total)}</span>
             </div>
             <Button block disabled={total === 0} onClick={orderPaid}>{t('cards.orderPay')}</Button>
           </div>
@@ -110,12 +111,12 @@ export default function Cards() {
 
         {orders.length > 0 && (
           <div>
-            <h3 className="mb-2 px-1 text-[15px] font-bold">{t('cards.orders')}</h3>
+            <h3 className="mb-2 px-1 pt-2 text-base font-semibold">{t('cards.orders')}</h3>
             <div className="space-y-2">
               {[...orders].reverse().map((o) => (
                 <Card key={o.id} className="py-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold">{o.id}</span>
+                    <span className="text-sm font-semibold">{o.id}</span>
                     <StatusPill tone={STATUS_TONE[o.status]}>{t(`cards.status.${o.status}`)}</StatusPill>
                   </div>
                   <p className="mt-1 text-xs text-ink/55">
@@ -126,13 +127,13 @@ export default function Cards() {
                     <span className="text-xs text-ink/45">{formatDate(o.createdAt.slice(0, 10), lang)} · {o.total ? formatRp(o.total) : t('status.free')}</span>
                     {o.status === 'awaitingPayment' && <Button size="sm" onClick={() => setPayId(o.id)}>{t('cards.pay')}</Button>}
                   </div>
-                  {o.status === 'ready' && <p className="mt-2 rounded-lg bg-[#E3F5E9] p-2 text-xs font-semibold text-[#17703D]">{t('cards.readyNote')}</p>}
+                  {o.status === 'ready' && <p className="mt-2 rounded-xl bg-[#E3F5E9] p-2.5 text-xs font-medium text-[#17703D]">{t('cards.readyNote')}</p>}
                 </Card>
               ))}
             </div>
           </div>
         )}
-      </div>
+      </ScreenBody>
       {payOrder && (
         <PaySheet
           open

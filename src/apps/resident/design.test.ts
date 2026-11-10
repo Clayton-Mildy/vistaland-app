@@ -28,6 +28,11 @@ export const REFRESHED: string[] = [
   // Task 5
   'src/apps/resident/home/SubsidizedHome.tsx',
   'src/apps/resident/home/RenterHome.tsx',
+  // Task 6
+  'src/apps/resident/screens/Bills.tsx',
+  'src/apps/resident/screens/PaySheet.tsx',
+  'src/apps/resident/screens/Wifi.tsx',
+  'src/apps/resident/screens/Cards.tsx',
 ];
 
 const RULES: [string, RegExp][] = [

@@ -1,5 +1,5 @@
 import { CheckCircle2, Info, ShieldAlert, Wifi } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { addMonths, dayOfMonth, formatDate, monthOf } from '../../../domain/clock';
 import { firstBilledMonth, freeUntilMonth, prepayPlan } from '../../../domain/ipl';
@@ -8,13 +8,13 @@ import type { BillStatus, MonthKey, Payment, PrepayPackage } from '../../../doma
 import { useLang, useT } from '../../../i18n';
 import { payBills } from '../../../store/actions';
 import { useData, useDerived, useResident, useRun, useToday } from '../../../store/hooks';
-import { AppBar } from '../../../ui/AppBar';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { cx } from '../../../ui/cx';
 import { StatusPill, type PillTone } from '../../../ui/StatusPill';
-import { Tabs } from '../../../ui/Tabs';
 import { useUnitBills } from '../hooks';
+import { ScreenBody } from '../ui/ScreenBody';
+import { ScreenHeader } from '../ui/ScreenHeader';
 import { PrepayGrid, prepayOptions } from '../PrepayGrid';
 import { PaySheet } from './PaySheet';
 
@@ -28,15 +28,10 @@ export default function Bills() {
   const [tab, setTab] = useState<'ipl' | 'wifi'>(params.get('tab') === 'wifi' ? 'wifi' : 'ipl');
   const [intent, setIntent] = useState<PayIntent | null>(null);
   const run = useRun();
+  const switcher = ctx.settings.features.wifi ? <TabSwitch value={tab} onChange={setTab} /> : undefined;
   return (
-    <div className="pb-6">
-      <AppBar back={false} title={t('bills.title', { unit: ctx.unit.code })} subtitle={ctx.project.name} />
-      {ctx.settings.features.wifi && (
-        <div className="bg-white px-4">
-          <Tabs value={tab} onChange={setTab} items={[{ value: 'ipl', label: 'IPL' }, { value: 'wifi', label: 'WiFi NAV1' }]} />
-        </div>
-      )}
-      <div className="space-y-3 p-4">{tab === 'ipl' ? <IplTab onPay={setIntent} openPrepay={params.get('prepay') === '1'} /> : <WifiTab onPay={setIntent} />}</div>
+    <div>
+      {tab === 'ipl' ? <IplTab onPay={setIntent} openPrepay={params.get('prepay') === '1'} switcher={switcher} /> : <WifiTab onPay={setIntent} switcher={switcher} />}
       {intent && (
         <PaySheet
           open
@@ -55,13 +50,26 @@ export default function Bills() {
   );
 }
 
+/** IPL / WiFi switch that sits in the title band. */
+function TabSwitch({ value, onChange }: { value: 'ipl' | 'wifi'; onChange: (v: 'ipl' | 'wifi') => void }) {
+  return (
+    <div className="flex shrink-0 rounded-full bg-white/[0.14] p-0.5" role="tablist">
+      {(['ipl', 'wifi'] as const).map((v) => (
+        <button key={v} role="tab" aria-selected={value === v} onClick={() => onChange(v)} className={cx('rounded-full px-3 py-1 text-xs font-medium transition', value === v ? 'bg-white text-ink' : 'text-white/80 hover:text-white')}>
+          {v === 'ipl' ? 'IPL' : 'WiFi'}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function monthRange(months: MonthKey[], lang: 'id' | 'en') {
   if (!months.length) return '';
   const a = formatDate(months[0], lang, 'month');
   return months.length === 1 ? a : `${a} – ${formatDate(months[months.length - 1], lang, 'month')}`;
 }
 
-function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrepay: boolean }) {
+function IplTab({ onPay, openPrepay, switcher }: { onPay: (i: PayIntent) => void; openPrepay: boolean; switcher?: ReactNode }) {
   const t = useT();
   const [lang] = useLang();
   const ctx = useResident()!;
@@ -77,7 +85,8 @@ function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrep
   const [pkgId, setPkgId] = useState<string | null>(null);
   const payments = useDerived((d) => d.payments.filter((p) => p.unitId === ctx.unit.id && p.kind === 'ipl').sort((a, b) => b.paidAt.localeCompare(a.paidAt)), [ctx.unit.id]);
 
-  if (!bast) return <Card className="text-sm text-ink/60">{t('bills.noBast')}</Card>;
+  const header = (figure?: ReactNode, sub?: ReactNode) => <ScreenHeader back={false} title={t('nav.bills')} right={switcher} eyebrow={`IPL · ${ctx.unit.code}`} figure={figure} sub={sub} />;
+  if (!bast) return <>{header(undefined, ctx.project.name)}<ScreenBody><Card className="text-sm text-ink/60">{t('bills.noBast')}</Card></ScreenBody></>;
   const overdue = bills.filter((b) => b.status === 'overdue');
   const due = bills.filter((b) => b.status === 'due');
   const payable = [...overdue, ...due];
@@ -98,33 +107,37 @@ function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrep
   const plan = selected ? planFor(selected.p.months) : [];
   const visible = showAll ? bills : bills.filter((b) => b.month >= addMonths(current, -6));
 
-  let hero: { title: string; body: string };
-  if (overdue.length) hero = { title: t('bills.hero.overdue', { n: overdue.length }), body: t('bills.hero.overdueBody', { amount: formatRp(overdue.reduce((a, b) => a + b.amount, 0)) }) };
-  else if (first > current) hero = { title: t('bills.hero.free', { month: formatDate(lastFree ?? first, lang, 'month') }), body: t('bills.hero.freeBody', { month: formatDate(first, lang, 'month'), due: formatDate(dayOfMonth(first, s.ipl.dueDay), lang), rate: formatRp(rate) }) };
-  else if (due.length) hero = { title: t('bills.hero.due', { month: formatDate(due[0].month, lang, 'month') }), body: t('bills.hero.dueBody', { date: formatDate(dayOfMonth(due[0].month, s.ipl.dueDay), lang), amount: formatRp(due[0].amount) }) };
-  else hero = { title: t('bills.hero.paid', { month: formatDate(paidThrough ?? current, lang, 'month') }), body: t('bills.hero.paidBody', { rate: formatRp(rate) }) };
+  const payableTotal = payable.reduce((a, b) => a + b.amount, 0);
+  // The band's key figure: the amount to pay, else the free or paid-through month.
+  let head: { figure: string; sub: string };
+  if (overdue.length) head = { figure: formatRp(payableTotal), sub: t('bills.head.overdue', { n: overdue.length }) };
+  else if (first > current) head = { figure: t('bills.hero.free', { month: formatDate(lastFree ?? first, lang, 'month') }), sub: t('bills.hero.freeBody', { month: formatDate(first, lang, 'month'), due: formatDate(dayOfMonth(first, s.ipl.dueDay), lang), rate: formatRp(rate) }) };
+  else if (due.length) head = { figure: formatRp(payableTotal), sub: t('bills.head.due', { date: formatDate(dayOfMonth(due[0].month, s.ipl.dueDay), lang) }) };
+  else head = { figure: t('bills.hero.paid', { month: formatDate(paidThrough ?? current, lang, 'month') }), sub: t('bills.hero.paidBody', { rate: formatRp(rate) }) };
 
   return (
     <>
-      <div className={cx('rounded-2xl p-4 text-white', overdue.length ? 'bg-gradient-to-br from-[#B4192A] to-[#7F1220]' : 'bg-gradient-to-br from-brand to-brand-dark')}>
-        <p className="text-xs font-semibold text-white/75">{t('bills.statusLabel')}</p>
-        <p className="mt-0.5 text-2xl font-extrabold leading-tight">{hero.title}</p>
-        <p className="mt-1 text-sm text-white/85">{hero.body}</p>
-        <p className="mt-2 text-[11px] text-white/70">{t('bills.rateLine', { type: ctx.type.name, rate: formatRp(rate) })}</p>
-        {payable.length > 0 && (
-          <Button
-            className="mt-3 !bg-white !bg-none !text-ink !shadow-none"
-            block
-            onClick={() => onPay({ kind: 'ipl', months: payable.map((b) => b.month), amount: payable.reduce((a, b) => a + b.amount, 0), label: t('bills.payMonths', { months: monthRange(payable.map((b) => b.month), lang) }) })}
-          >
-            {t('bills.payNow', { amount: formatRp(payable.reduce((a, b) => a + b.amount, 0)) })}
-          </Button>
+      {header(head.figure, head.sub)}
+      <ScreenBody>
+      <Card>
+        {payable.length > 0 ? (
+          <>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-sm text-ink/60">{t('bills.payMonths', { months: monthRange(payable.map((b) => b.month), lang) })}</span>
+              <span className="text-base font-semibold tabular">{formatRp(payableTotal)}</span>
+            </div>
+            <Button className="mt-3" block onClick={() => onPay({ kind: 'ipl', months: payable.map((b) => b.month), amount: payableTotal, label: t('bills.payMonths', { months: monthRange(payable.map((b) => b.month), lang) }) })}>
+              {t('bills.payNow', { amount: formatRp(payableTotal) })}
+            </Button>
+            {overdue.length > 0 && <p className="mt-3 flex items-start gap-2 text-xs text-ink/55"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />{t('bills.noFine')}</p>}
+          </>
+        ) : (
+          <p className="text-sm text-ink/60">{t('bills.rateLine', { type: ctx.type.name, rate: formatRp(rate) })}</p>
         )}
-      </div>
-      {overdue.length > 0 && <p className="flex items-start gap-2 px-1 text-xs text-ink/55"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />{t('bills.noFine')}</p>}
+      </Card>
       {activeCns.length > 0 && (
-        <div className="rounded-2xl border border-[#F3C5CA] bg-[#FFF5F6] p-3 text-sm text-[#7A1220]">
-          <p className="flex items-center gap-1.5 font-bold"><ShieldAlert className="h-4 w-4" />{t('bills.cns.title')}</p>
+        <div className="rounded-2xl border border-[#F3C5CA] bg-[#FFF5F6] p-4 text-sm text-[#7A1220]">
+          <p className="flex items-center gap-1.5 font-semibold"><ShieldAlert className="h-4 w-4" />{t('bills.cns.title')}</p>
           <ul className="mt-1 space-y-0.5">
             {activeCns.map((c) => <li key={c.id}>{t(`bills.cns.${c.type}`, { date: formatDate(c.startedAt, lang) })}</li>)}
           </ul>
@@ -136,8 +149,8 @@ function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrep
         {visible.map((b) => (
           <div key={b.id} className="flex items-center justify-between px-4 py-3">
             <div>
-              <p className="text-sm font-semibold">{formatDate(b.month, lang, 'month')}</p>
-              <p className="text-[11px] text-ink/45">
+              <p className="text-sm font-medium">{formatDate(b.month, lang, 'month')}</p>
+              <p className="text-xs text-ink/45">
                 {b.free ? t('bills.row.free') : b.status === 'overdue' ? t('bills.row.late', { date: formatDate(dayOfMonth(b.month, s.ipl.dueDay), lang) }) : b.status === 'paid' ? formatRp(b.amount) : t('bills.row.due', { date: formatDate(dayOfMonth(b.month, s.ipl.dueDay), lang), amount: formatRp(b.amount) })}
                 {isRenterPaid(b.month) && ` · ${t('bills.row.renter')}`}
               </p>
@@ -146,18 +159,18 @@ function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrep
           </div>
         ))}
         {bills.length > visible.length && (
-          <button onClick={() => setShowAll(true)} className="w-full py-3 text-center text-xs font-bold text-brand-dark">{t('bills.showAll', { n: bills.length - visible.length })}</button>
+          <button onClick={() => setShowAll(true)} className="w-full py-3 text-center text-xs font-medium text-brand">{t('bills.showAll', { n: bills.length - visible.length })}</button>
         )}
       </Card>
 
       {packages.length > 1 && (
         <Card>
           <div className="flex items-center justify-between">
-            <span className="font-bold">{t('bills.prepayTitle')}</span>
+            <span className="text-base font-semibold">{t('bills.prepayTitle')}</span>
             {ctx.segment === 'subsidi' && !prepayOpen ? (
               <Button size="sm" variant="secondary" onClick={() => setPrepayOpen(true)}>{t('bills.prepayOptional')}</Button>
             ) : (
-              <span className="text-[11px] text-ink/45">{t('bills.validUntil', { date: formatDate(s.prepay.validUntil, lang) })}</span>
+              <span className="shrink-0 text-xs text-ink/45">{t('bills.validUntil', { date: formatDate(s.prepay.validUntil, lang) })}</span>
             )}
           </div>
           {prepayOpen && (
@@ -169,7 +182,7 @@ function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrep
               )}
               {selected && plan.length > 0 && (
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center justify-between rounded-xl bg-brand-tint/50 px-3 py-2.5 text-sm">
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-paper px-3 py-2.5 text-sm">
                     <span>{t('bills.planLine', { n: selected.p.months, range: monthRange(plan, lang) })}</span>
                     <b className="tabular">{formatRp(selected.q.net)}</b>
                   </div>
@@ -195,6 +208,7 @@ function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrep
       )}
       <p className="px-1 text-xs text-ink/50">{t('bills.vaNote')}</p>
       <History payments={payments} />
+      </ScreenBody>
     </>
   );
 }
@@ -204,7 +218,7 @@ function History({ payments }: { payments: Payment[] }) {
   const [lang] = useLang();
   return (
     <Card>
-      <p className="font-bold">{t('bills.history')}</p>
+      <p className="text-base font-semibold">{t('bills.history')}</p>
       {payments.length === 0 ? (
         <p className="mt-1 text-sm text-ink/50">{t('bills.noHistory')}</p>
       ) : (
@@ -212,13 +226,13 @@ function History({ payments }: { payments: Payment[] }) {
           {payments.slice(0, 8).map((p) => (
             <li key={p.id} className="flex items-center justify-between py-2.5">
               <div>
-                <p className="text-sm font-semibold">{monthRange(p.months ?? [], lang)}</p>
-                <p className="text-[11px] text-ink/45">
+                <p className="text-sm font-medium">{monthRange(p.months ?? [], lang)}</p>
+                <p className="text-xs text-ink/45">
                   {formatDate(p.paidAt.slice(0, 10), lang)} · {t(`method.${p.method}`)}{p.recordedBy === 'admin' ? ` · ${t('bills.byEstate')}` : ''}
                   {p.discount > 0 && ` · ${t('bills.discount', { amount: formatRp(p.discount) })}`}
                 </p>
               </div>
-              <span className="flex items-center gap-1 text-sm font-bold tabular"><CheckCircle2 className="h-4 w-4 text-[#17703D]" />{formatRp(p.amount)}</span>
+              <span className="flex shrink-0 items-center gap-1 text-sm font-semibold tabular"><CheckCircle2 className="h-4 w-4 text-[#17703D]" />{formatRp(p.amount)}</span>
             </li>
           ))}
         </ul>
@@ -227,7 +241,7 @@ function History({ payments }: { payments: Payment[] }) {
   );
 }
 
-function WifiTab({ onPay }: { onPay: (i: PayIntent) => void }) {
+function WifiTab({ onPay, switcher }: { onPay: (i: PayIntent) => void; switcher?: ReactNode }) {
   const t = useT();
   const [lang] = useLang();
   const nav = useNavigate();
@@ -236,35 +250,49 @@ function WifiTab({ onPay }: { onPay: (i: PayIntent) => void }) {
   const bills = useUnitBills('wifi');
   const payments = useDerived((d) => d.payments.filter((p) => p.unitId === ctx.unit.id && p.kind === 'wifi').sort((a, b) => b.paidAt.localeCompare(a.paidAt)), [ctx.unit.id]);
   const pkg = sub && ctx.settings.wifi.packages.find((p) => p.id === sub.packageId);
+  const header = (figure: ReactNode, sub?: ReactNode) => <ScreenHeader back={false} title={t('nav.bills')} right={switcher} eyebrow={`WiFi NAV1 · ${ctx.unit.code}`} figure={figure} sub={sub} />;
   if (!sub || !pkg) {
     return (
-      <Card className="flex flex-col items-center py-8 text-center">
-        <Wifi className="h-10 w-10 text-brand" />
-        <p className="mt-2 font-bold">{t('bills.wifiNone')}</p>
-        <p className="mt-1 text-sm text-ink/55">{ctx.settings.wifi.promoEnabled ? t('status.wifi.promo', { n: ctx.settings.wifi.freeMonths }) : t('wifi.noPromo')}</p>
-        <Button className="mt-4" onClick={() => nav('/app/wifi')}>{t('status.wifi.choose')}</Button>
-      </Card>
+      <>
+        {header(t('bills.wifiNone'))}
+        <ScreenBody>
+          <Card className="flex flex-col items-center py-8 text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-tint text-brand-dark"><Wifi className="h-6 w-6" strokeWidth={1.75} /></span>
+            <p className="mt-3 text-base font-semibold">{t('bills.wifiNone')}</p>
+            <p className="mt-1 text-sm text-ink/55">{ctx.settings.wifi.promoEnabled ? t('status.wifi.promo', { n: ctx.settings.wifi.freeMonths }) : t('wifi.noPromo')}</p>
+            <Button className="mt-4" onClick={() => nav('/app/wifi')}>{t('status.wifi.choose')}</Button>
+          </Card>
+        </ScreenBody>
+      </>
     );
   }
   const payable = bills.filter((b) => b.status === 'overdue' || b.status === 'due');
+  const payableTotal = payable.reduce((a, b) => a + b.amount, 0);
   const prepay = ctx.settings.prepay.wifi.filter((p) => p.active);
   return (
     <>
-      <div className="rounded-2xl bg-gradient-to-br from-[#2463C9] to-[#173F87] p-4 text-white">
-        <p className="text-xs font-semibold text-white/75">WiFi NAV1</p>
-        <p className="text-2xl font-extrabold">{pkg.name} · {pkg.mbps} Mbps</p>
-        <p className="mt-1 text-sm text-white/85">{sub.status !== 'installed' ? t('wifi.waiting') : sub.freeUntil ? t('bills.wifiFree', { month: formatDate(sub.freeUntil, lang, 'month'), price: formatRp(pkg.price) }) : t('bills.wifiPrice', { price: formatRp(pkg.price) })}</p>
-        {payable.length > 0 && (
-          <Button className="mt-3 !bg-white !bg-none !text-ink !shadow-none" block onClick={() => onPay({ kind: 'wifi', months: payable.map((b) => b.month), amount: payable.reduce((a, b) => a + b.amount, 0), label: t('bills.payMonths', { months: monthRange(payable.map((b) => b.month), lang) }) })}>
-            {t('bills.payNow', { amount: formatRp(payable.reduce((a, b) => a + b.amount, 0)) })}
-          </Button>
+      {header(`${pkg.name} · ${pkg.mbps} Mbps`, sub.status !== 'installed' ? t(`status.wifi.${sub.status}`) : sub.freeUntil ? t('bills.wifiFree', { month: formatDate(sub.freeUntil, lang, 'month'), price: formatRp(pkg.price) }) : t('bills.wifiPrice', { price: formatRp(pkg.price) }))}
+      <ScreenBody>
+      <Card>
+        {payable.length > 0 ? (
+          <>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-sm text-ink/60">{t('bills.payWifiMonths', { months: monthRange(payable.map((b) => b.month), lang) })}</span>
+              <span className="text-base font-semibold tabular">{formatRp(payableTotal)}</span>
+            </div>
+            <Button className="mt-3" block onClick={() => onPay({ kind: 'wifi', months: payable.map((b) => b.month), amount: payableTotal, label: t('bills.payWifiMonths', { months: monthRange(payable.map((b) => b.month), lang) }) })}>
+              {t('bills.payNow', { amount: formatRp(payableTotal) })}
+            </Button>
+          </>
+        ) : (
+          <p className="text-sm text-ink/60">{sub.status !== 'installed' ? t('wifi.waiting') : t('wifi.billsNote')}</p>
         )}
-      </div>
+      </Card>
       {bills.length > 0 && (
         <Card className="divide-y divide-line p-0">
           {bills.slice(-8).map((b) => (
             <div key={b.id} className="flex items-center justify-between px-4 py-3">
-              <span className="text-sm font-semibold">{formatDate(b.month, lang, 'month')}</span>
+              <span className="text-sm font-medium">{formatDate(b.month, lang, 'month')}</span>
               <span className="flex items-center gap-2 text-xs text-ink/50">{!b.free && formatRp(b.amount)}<StatusPill tone={TONE[b.status]}>{t(`status.${b.status}`)}</StatusPill></span>
             </div>
           ))}
@@ -272,8 +300,8 @@ function WifiTab({ onPay }: { onPay: (i: PayIntent) => void }) {
       )}
       {sub.status === 'installed' && prepay.length > 0 && (
         <Card>
-          <p className="font-bold">{t('bills.wifiPrepay')}</p>
-          <div className="mt-2">
+          <p className="text-base font-semibold">{t('bills.wifiPrepay')}</p>
+          <div className="mt-3">
             <PrepayGrid
               packages={prepay}
               rate={pkg.price}
@@ -287,6 +315,7 @@ function WifiTab({ onPay }: { onPay: (i: PayIntent) => void }) {
         </Card>
       )}
       <History payments={payments} />
+      </ScreenBody>
     </>
   );
 }

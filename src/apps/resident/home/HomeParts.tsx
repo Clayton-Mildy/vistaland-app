@@ -9,7 +9,7 @@ import { useData, useNotifications, useResident } from '../../../store/hooks';
 import { Button } from '../../../ui/Button';
 import { Sheet } from '../../../ui/Sheet';
 import { STEP_ROUTE } from '../auth/Welcome';
-import { useIplSummary } from '../hooks';
+import { useIplSummary, useUnitBills } from '../hooks';
 import { HouseCard } from '../ui/HouseCard';
 import { houseFor } from '../ui/media';
 import { MENU, useMenuState } from './MenuGrid';
@@ -69,13 +69,15 @@ export function IplHouseCard({ occupancy }: { occupancy: ReactNode }) {
   const nav = useNavigate();
   const ctx = useResident()!;
   const ipl = useIplSummary();
+  // The amount Bayar charges on the bills screen: every overdue and due month.
+  const payable = useUnitBills('ipl').filter((b) => b.status === 'overdue' || b.status === 'due').reduce((a, b) => a + b.amount, 0);
   const photo = houseFor(ctx.unit);
   const bills = () => nav('/app/bills');
   const pay = <Button size="sm" onClick={bills}>{t('home.pay')}</Button>;
   const view = <Button size="sm" variant="secondary" onClick={bills}>{t('common.view')}</Button>;
   const card = { photoId: photo, occupancy, label: t('home.iplLabel'), onClick: bills };
-  if (ipl.kind === 'overdue') return <HouseCard {...card} amount={formatRp(ipl.amount)} note={t('status.ipl.overdue', { n: ipl.n })} noteTone="danger" action={pay} />;
-  if (ipl.kind === 'due') return <HouseCard {...card} amount={formatRp(ipl.amount)} note={t('status.ipl.due')} action={pay} />;
+  if (ipl.kind === 'overdue') return <HouseCard {...card} amount={formatRp(payable)} note={t('status.ipl.overdue', { n: ipl.n })} noteTone="danger" action={pay} />;
+  if (ipl.kind === 'due') return <HouseCard {...card} amount={formatRp(payable)} note={t('status.ipl.due')} action={pay} />;
   if (ipl.kind === 'free') return <HouseCard {...card} amount={t('status.ipl.free')} note={t('status.ipl.until', { month: formatDate(ipl.lastFree ?? ipl.firstBilled, lang, 'month') })} noteTone="success" action={view} />;
   if (ipl.kind === 'paid') return <HouseCard {...card} amount={t('status.paid')} note={ipl.paidThrough ? t('status.ipl.through', { month: formatDate(ipl.paidThrough, lang, 'month') }) : undefined} noteTone="success" action={view} />;
   return <HouseCard {...card} amount={t('status.ipl.notStarted')} action={view} />;
