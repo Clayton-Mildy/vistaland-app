@@ -5,7 +5,7 @@ A clickable, fully working prototype of **VHome**: the resident app for Vistalan
 - **Resident app** (`/app`): built as a phone app. The **commercial** project (Vista Harmoni Residence, red) gets the full app. The **subsidized** project (Harmoni Park Cibitung, teal) gets a simpler version. Which one you see depends on who logs in.
 - **Field-staff app** (`/staff`): security post, contractor foreman, gardener.
 - **Estate dashboard** (`/dashboard`): occupancy, handover, residents and renters, leads, IPL billing, pay-ahead offers, complaints and renovation, cards and arrears, finance, security, community, monthly report, settings.
-- **Demo view** (`/demo`): the phone (resident or staff) next to the dashboard, so you can watch changes travel between them.
+- **Demo view** (`/demo`): the phone (resident or staff) next to the dashboard, so you can watch changes travel between them. The **Tampilan** switch shows both side by side, the phone only (scaled to fill the window) or the dashboard only; both stay loaded, so switching keeps logins and scroll position. Links like `/demo?view=phone` or `/demo?view=dashboard` open straight into one view.
 
 Indonesian is the default language. Every screen has an ID / EN toggle.
 

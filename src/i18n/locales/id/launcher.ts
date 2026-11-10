@@ -16,4 +16,8 @@ export default {
   'persona.mandor': 'Kerjakan temuan komplain, unggah foto sesudah untuk cek AI.',
   'persona.gardener': 'Absen, log potong rumput, catat bensin.',
   'demo.back': 'Kembali ke beranda prototipe', 'demo.left': 'Layar kiri', 'demo.resident': 'Warga', 'demo.staff': 'Petugas',
+  'demo.view': 'Tampilan',
+  'demo.view.split': 'Berdampingan',
+  'demo.view.phone': 'HP saja',
+  'demo.view.dashboard': 'Dashboard saja',
 } as Record<string, string>;

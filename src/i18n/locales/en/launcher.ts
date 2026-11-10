@@ -16,4 +16,8 @@ export default {
   'persona.mandor': 'Work on complaint findings, upload after-photos for the AI check.',
   'persona.gardener': 'Check in, log mowing, record fuel.',
   'demo.back': 'Back to the prototype home', 'demo.left': 'Left screen', 'demo.resident': 'Resident', 'demo.staff': 'Staff',
+  'demo.view': 'View',
+  'demo.view.split': 'Side by side',
+  'demo.view.phone': 'Phone only',
+  'demo.view.dashboard': 'Dashboard only',
 } as Record<string, string>;
