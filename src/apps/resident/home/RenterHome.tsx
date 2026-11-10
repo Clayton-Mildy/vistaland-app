@@ -1,14 +1,22 @@
-import { AlertTriangle, Bell, Car, Cctv, Check, Mail, PaintRoller, Phone, Plus, ShoppingBag, Truck } from 'lucide-react';
+import { AlertTriangle, Car, Cctv, Check, ChevronRight, Mail, PaintRoller, Phone, Plus, ShoppingBag, Truck } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { diffDays, formatDate } from '../../../domain/clock';
 import { useLang, useT } from '../../../i18n';
-import { useDerived, useNotifications, useResident, useToday } from '../../../store/hooks';
+import { useDerived, useResident, useToday } from '../../../store/hooks';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { cx } from '../../../ui/cx';
+import { IconTile } from '../../../ui/IconTile';
 import { LangToggle } from '../../../ui/LangToggle';
 import { Progress } from '../../../ui/Progress';
+import { Section } from '../../../ui/Section';
 import { StatusPill } from '../../../ui/StatusPill';
+import { greetingKey } from '../hooks';
+import { HomeBand } from '../ui/HomeBand';
+import { HouseCard } from '../ui/HouseCard';
+import { houseFor } from '../ui/media';
+import { HomeSearchSheet, HomeTopRow, IplHouseCard } from './HomeParts';
 import { Announcements, IplStatus } from './StatusCards';
 
 export default function RenterHome() {
@@ -18,11 +26,10 @@ export default function RenterHome() {
   const ctx = useResident()!;
   const renter = ctx.renter!;
   const today = useToday();
-  const unread = useNotifications(ctx.recipientKey).filter((n) => !n.read).length;
+  const [search, setSearch] = useState(false);
   const data = useDerived((d) => ({
     reg: d.registrations.find((r) => r.renterId === renter.id),
     order: d.cardOrders.filter((o) => o.unitId === ctx.unit.id).at(-1),
-    permit: d.moveIns.find((m) => m.renterId === renter.id && m.status !== 'cancelled'),
     renovations: d.renovations.filter((r) => r.renterId === renter.id),
   }), [renter.id, ctx.unit.id]);
   const steps = [
@@ -33,106 +40,112 @@ export default function RenterHome() {
     { key: 'moveIn', done: !!renter.movedInAt, route: '/app/move-in' },
   ];
   const done = steps.filter((s) => s.done).length;
+  const next = steps.find((s) => !s.done);
   const leftDays = diffDays(today, renter.lease.end);
+  const role = t('role.renter');
   const shortcuts = [
-    { icon: Car, label: t('home.vehicles'), sub: t('renter.cardsSub'), route: '/app/cards' },
-    { icon: Truck, label: t('feature.moveIn'), sub: data.permit ? formatDate(data.permit.date, lang, 'weekday') : t('renter.done'), route: '/app/move-in' },
-    { icon: Cctv, label: t('feature.cctv'), sub: renter.movedInAt ? t('renter.cctvOn') : t('renter.cctvAfter'), route: '/app/cctv' },
-    { icon: Phone, label: t('feature.numbers'), sub: t('renter.numbersSub'), route: '/app/emergency' },
-    { icon: Mail, label: t('feature.feedback'), sub: t('renter.feedbackSub'), route: '/app/feedback' },
-    { icon: ShoppingBag, label: t('feature.businesses'), sub: t('renter.bizSub'), route: '/app/businesses' },
+    { icon: Car, label: t('home.vehicles'), route: '/app/cards' },
+    { icon: Truck, label: t('feature.moveIn'), route: '/app/move-in' },
+    { icon: Cctv, label: t('feature.cctv'), route: '/app/cctv' },
+    { icon: Phone, label: t('feature.numbers'), route: '/app/emergency' },
+    { icon: Mail, label: t('feature.feedback'), route: '/app/feedback' },
+    { icon: ShoppingBag, label: t('feature.businesses'), route: '/app/businesses' },
   ];
+
+  const lead = next ? (
+    <HouseCard photoId={houseFor(ctx.unit)} occupancy={role} label={t('renter.prep')} amount={t(`renter.step.${next.key}`)} note={t('home.prepareCount', { n: done, total: steps.length })}
+      action={next.route ? <Button size="sm" onClick={() => nav(next.route!)}>{t('home.doIt')}</Button> : undefined} />
+  ) : renter.iplPayer === 'renter' ? (
+    <IplHouseCard occupancy={role} />
+  ) : (
+    <HouseCard photoId={houseFor(ctx.unit)} occupancy={role} label={t('renter.leaseLabel')} amount={formatDate(renter.lease.end, lang)} note={t('home.daysLeft', { n: leftDays })} noteTone={leftDays <= 30 ? 'danger' : 'muted'} />
+  );
+
   return (
-    <div className="pb-4">
-      <div className="bg-[#1F2937] px-5 pb-16 pt-5 text-white md:pt-10">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-white/65">{ctx.project.name}</span>
-            <StatusPill tone="gold">{t('role.renter')}</StatusPill>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <button onClick={() => nav('/app/notifications')} className="relative rounded-full p-1.5 hover:bg-white/10" aria-label={t('account.notifications')}>
-              <Bell className="h-5 w-5" />
-              {unread > 0 && <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[9px] font-bold text-ink">{unread}</span>}
-            </button>
-            <button onClick={() => nav('/app/emergency')} className="flex items-center gap-1 rounded-full bg-brand px-2.5 py-1.5 text-xs font-bold">
-              <AlertTriangle className="h-3.5 w-3.5" /> {t('renter.emergency')}
-            </button>
-          </div>
-        </div>
-        <h1 className="mt-3 text-2xl font-extrabold">{t('home.hello', { name: ctx.name.split(' ')[0] })}</h1>
-        <p className="text-sm text-white/75">{t('renter.leaseLine', { unit: ctx.unit.code, start: formatDate(renter.lease.start, lang), end: formatDate(renter.lease.end, lang) })}</p>
-        <p className="mt-1 text-xs text-white/55">{t('renter.ownedBy', { owner: ctx.ownerName })} · <LangToggle dark className="ml-1 align-middle" /></p>
-      </div>
-      <div className="-mt-11 space-y-3 px-4">
+    <div>
+      <HomeBand
+        eyebrow={ctx.project.name}
+        greeting={t(greetingKey(), { name: ctx.name.split(' ')[0] })}
+        unitLine={t('renter.leaseLine', { unit: ctx.unit.code, start: formatDate(renter.lease.start, lang), end: formatDate(renter.lease.end, lang) })}
+        note={t('renter.ownedBy', { owner: ctx.ownerName })}
+        right={<LangToggle dark />}
+      >
+        <HomeTopRow onSearch={() => setSearch(true)} />
+      </HomeBand>
+
+      <div className="relative -mt-10 space-y-3 px-4">
+        {lead}
         {leftDays <= 30 && (
-          <div className="flex items-start gap-2 rounded-2xl border border-[#F3D9A4] bg-[#FFF8E8] p-3 text-xs font-semibold text-[#8A5A00]">
+          <div className="flex items-start gap-2.5 rounded-2xl border border-[#F3D9A4] bg-[#FFF8E8] p-3 text-xs font-medium text-[#8A5A00]">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             {t('renter.leaseEnding', { n: leftDays, date: formatDate(renter.lease.end, lang) })}
           </div>
         )}
-        <Card className="p-0">
-          <div className="px-4 pt-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[15px] font-bold">{t('renter.prep')}</span>
-              <span className="text-xs font-semibold text-ink/50">{t('home.prepareCount', { n: done, total: steps.length })}</span>
+        {next && (
+          <Card className="border-l-[3px] border-l-gold p-0">
+            <div className="px-4 pt-4">
+              <div className="flex items-center justify-between">
+                <span className="text-base font-semibold">{t('renter.prep')}</span>
+                <span className="text-xs font-medium tabular text-ink/55">{t('home.prepareCount', { n: done, total: steps.length })}</span>
+              </div>
+              <Progress className="mt-2" value={(done / steps.length) * 100} />
             </div>
-            <Progress className="mt-2" value={(done / steps.length) * 100} />
-          </div>
-          <ul className="mt-2 divide-y divide-line">
-            {steps.map((s) => (
-              <li key={s.key}>
-                <button disabled={!s.route || s.done} onClick={() => s.route && nav(s.route)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left disabled:cursor-default">
-                  <span className={cx('flex h-6 w-6 items-center justify-center rounded-full border-2', s.done ? 'border-brand bg-brand text-white' : 'border-line')}>{s.done && <Check className="h-3.5 w-3.5" strokeWidth={3} />}</span>
-                  <span className={cx('flex-1 text-sm', s.done ? 'text-ink/60' : 'font-semibold')}>{t(`renter.step.${s.key}`)}</span>
-                  {!s.done && s.route && <span className="rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold text-white">{t('home.doIt')}</span>}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </Card>
+            <ul className="mt-2 divide-y divide-line">
+              {steps.map((s) => (
+                <li key={s.key}>
+                  <button disabled={!s.route || s.done} onClick={() => s.route && nav(s.route)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left disabled:cursor-default">
+                    <span className={cx('flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2', s.done ? 'border-brand-dark bg-brand-dark text-white' : s.key === next.key ? 'border-gold' : 'border-line')}>{s.done && <Check className="h-3.5 w-3.5" strokeWidth={3} />}</span>
+                    <span className={cx('flex-1 text-sm', s.done ? 'text-ink/60' : 'font-semibold')}>{t(`renter.step.${s.key}`)}</span>
+                    {!s.done && s.route && <ChevronRight className={cx('h-4 w-4', s.key === next.key ? 'text-brand' : 'text-ink/25')} />}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
 
         {renter.iplPayer === 'renter' ? (
-          <div className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-2xl border border-line bg-white p-3 shadow-card">
-            <div>
-              <p className="text-xs text-ink/50">{t('renter.iplToYou')}</p>
-              <p className="text-sm font-semibold">{t('renter.iplAgreement')}</p>
-            </div>
-            <div className="w-28"><IplStatus /></div>
-          </div>
+          next && (
+            <Card className="flex items-center gap-3 p-0 pl-4">
+              <div className="min-w-0 flex-1 py-3">
+                <p className="text-xs text-ink/55">{t('renter.iplToYou')}</p>
+                <p className="text-sm font-semibold">{t('renter.iplAgreement')}</p>
+              </div>
+              <div className="w-32 shrink-0 border-l border-line"><IplStatus /></div>
+            </Card>
+          )
         ) : (
           <Card className="py-3 text-xs text-ink/55">{t('renter.iplOwner')}</Card>
         )}
 
         <Card>
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-[15px] font-bold"><PaintRoller className="h-4 w-4 text-[#D2611B]" />{t('feature.renovation')}</span>
+          <div className="flex items-center justify-between gap-3">
+            <span className="flex items-center gap-2 text-base font-semibold"><PaintRoller className="h-4 w-4 text-brand-dark" strokeWidth={1.75} />{t('feature.renovation')}</span>
             <Button size="sm" variant="secondary" icon={<Plus className="h-3.5 w-3.5" />} onClick={() => nav('/app/renovation')}>{t('renter.request')}</Button>
           </div>
-          <p className="mt-1 text-xs text-ink/50">{t('renter.renovationNote')}</p>
+          <p className="mt-1 text-xs text-ink/55">{t('renter.renovationNote')}</p>
           {data.renovations.map((r) => (
-            <button key={r.id} onClick={() => nav(`/app/renovation/${r.id}`)} className="mt-3 flex w-full items-center justify-between rounded-xl border border-line px-3 py-2.5 text-left">
-              <span>
-                <span className="block text-sm font-semibold">{r.id} · {r.title}</span>
-                <span className="block text-[11px] text-ink/45">{t(`reno.step.${r.step}`)}</span>
+            <button key={r.id} onClick={() => nav(`/app/renovation/${r.id}`)} className="mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-line px-3 py-2.5 text-left">
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-medium">{r.id} · {r.title}</span>
+                <span className="block text-xs text-ink/45">{t(`reno.step.${r.step}`)}</span>
               </span>
               <StatusPill tone={r.step === 'ownerApproval' ? 'warning' : r.step === 'rejected' ? 'danger' : 'info'}>{t(`reno.short.${r.step}`)}</StatusPill>
             </button>
           ))}
         </Card>
+      </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
-          {shortcuts.map((s) => (
-            <button key={s.label} onClick={() => nav(s.route)} className="rounded-2xl border border-line/80 bg-white p-3 text-left shadow-card">
-              <s.icon className="h-5 w-5 text-brand" />
-              <span className="mt-1.5 block text-sm font-bold">{s.label}</span>
-              <span className="block truncate text-[11px] text-ink/50">{s.sub}</span>
-            </button>
-          ))}
-        </div>
-        <p className="px-1 text-[11px] leading-relaxed text-ink/45">{t('renter.ownerOnly')}</p>
+      <div className="px-4">
+        <Section title={t('home.quick')}>
+          <Card className="grid grid-cols-3 gap-x-2 gap-y-4 px-3 py-4">
+            {shortcuts.map((s) => <IconTile key={s.label} icon={s.icon} label={s.label} locked={s.route === '/app/cctv' && !renter.movedInAt} onClick={() => nav(s.route)} />)}
+          </Card>
+        </Section>
+        <p className="mt-3 px-1 text-xs leading-relaxed text-ink/45">{t('renter.ownerOnly')}</p>
         <Announcements />
       </div>
+      <HomeSearchSheet open={search} onClose={() => setSearch(false)} />
     </div>
   );
 }

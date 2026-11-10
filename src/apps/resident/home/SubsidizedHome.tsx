@@ -1,15 +1,18 @@
-import { Bell, Car, Info, Mail, MessageSquareWarning, PaintRoller, ShoppingBag } from 'lucide-react';
+import { Car, Info, Mail, MessageSquareWarning, PaintRoller, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../../../domain/clock';
 import { useLang, useT } from '../../../i18n';
-import { useNotifications, useResident } from '../../../store/hooks';
+import { useResident } from '../../../store/hooks';
 import { Card } from '../../../ui/Card';
 import { IconTile } from '../../../ui/IconTile';
 import { LangToggle } from '../../../ui/LangToggle';
+import { Section } from '../../../ui/Section';
 import { Sheet } from '../../../ui/Sheet';
-import { useComplaintWindowState } from '../hooks';
-import { useMenuState, MENU } from './MenuGrid';
+import { greetingKey, useComplaintWindowState } from '../hooks';
+import { HomeBand } from '../ui/HomeBand';
+import { HomeSearchSheet, HomeTopRow, OwnerHouseCard } from './HomeParts';
+import { MENU, useMenuState } from './MenuGrid';
 import { OnboardingCard } from './OnboardingCard';
 import { Announcements, CardsStatus, IplStatus, WifiStatus } from './StatusCards';
 
@@ -18,67 +21,67 @@ export default function SubsidizedHome() {
   const [lang] = useLang();
   const nav = useNavigate();
   const ctx = useResident()!;
-  const unread = useNotifications(ctx.recipientKey).filter((n) => !n.read).length;
   const win = useComplaintWindowState();
   const state = useMenuState();
   const lockedOf = (key: string) => state(MENU.find((m) => m.key === key)!) === 'locked';
   const [info, setInfo] = useState(false);
+  const [search, setSearch] = useState(false);
   return (
-    <div className="pb-4">
-      <div className="bg-gradient-to-b from-brand to-brand-dark px-5 pb-16 pt-5 text-white md:pt-10">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/75">{ctx.project.name}</span>
-          <div className="flex items-center gap-2">
-            <LangToggle dark />
-            <button onClick={() => nav('/app/notifications')} className="relative rounded-full p-1.5 hover:bg-white/10" aria-label={t('account.notifications')}>
-              <Bell className="h-5 w-5" />
-              {unread > 0 && <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[9px] font-bold text-ink">{unread}</span>}
-            </button>
-          </div>
-        </div>
-        <h1 className="mt-2 text-2xl font-extrabold">{t('home.hello', { name: ctx.name.split(' ')[0] })}</h1>
-        <p className="text-sm text-white/80">{t('home.unitType', { unit: ctx.unit.code, type: ctx.type.name })}</p>
-      </div>
-      <div className="-mt-11 space-y-3 px-4">
+    <div>
+      <HomeBand
+        eyebrow={ctx.project.name}
+        greeting={t(greetingKey(), { name: ctx.name.split(' ')[0] })}
+        unitLine={t('home.unitRole', { unit: ctx.unit.code, type: ctx.type.name, role: t(`role.${ctx.role}`) })}
+        right={<LangToggle dark />}
+      >
+        <HomeTopRow onSearch={() => setSearch(true)} />
+      </HomeBand>
+
+      <div className="relative -mt-10 space-y-3 px-4">
+        <OwnerHouseCard />
         {ctx.unit.occupancy === 'occupied' ? (
-          <Card className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-ink/50">{t('home.occupiedSince')}</p>
-              <p className="text-[15px] font-bold">{ctx.unit.moveIn ? formatDate(ctx.unit.moveIn.date, lang) : '—'}</p>
+          <Card className="grid grid-cols-2 divide-x divide-line p-0">
+            <div className="p-3">
+              <p className="text-xs text-ink/55">{t('home.occupiedSince')}</p>
+              <p className="mt-1 text-sm font-semibold">{ctx.unit.moveIn ? formatDate(ctx.unit.moveIn.date, lang) : '—'}</p>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-ink/50">{t('home.complaintWindow')}</p>
-              <p className="text-[15px] font-bold text-brand">{win.status === 'open' ? t('home.daysLeft', { n: win.daysLeft }) : t('home.windowClosed')}</p>
+            <div className="p-3">
+              <p className="text-xs text-ink/55">{t('home.complaintWindow')}</p>
+              <p className="mt-1 text-sm font-semibold text-brand-dark">{win.status === 'open' ? t('home.daysLeft', { n: win.daysLeft }) : t('home.windowClosed')}</p>
             </div>
           </Card>
         ) : (
           <OnboardingCard />
         )}
-        <div className="grid grid-cols-3 gap-2">
+        <Card className="grid auto-cols-fr grid-flow-col divide-x divide-line p-0">
           <IplStatus />
           <WifiStatus />
           <CardsStatus />
-        </div>
-        <Card>
-          <h3 className="mb-3 px-1 text-[13px] font-bold text-ink/70">{t('home.quick')}</h3>
-          <div className="grid grid-cols-3 gap-y-4">
+        </Card>
+      </div>
+
+      <div className="px-4">
+        <Section title={t('home.quick')}>
+          <Card className="grid grid-cols-3 gap-x-2 gap-y-4 px-3 py-4">
             <IconTile icon={PaintRoller} label={t('feature.renovation')} locked={lockedOf('renovation')} onClick={() => nav('/app/renovation')} />
             <IconTile icon={MessageSquareWarning} label={t('feature.complaint')} locked={lockedOf('complaint')} badge={win.status === 'open' ? t('menu.daysBadge', { n: win.daysLeft }) : undefined} onClick={() => nav('/app/complaint')} />
             <IconTile icon={Car} label={t('home.vehicles')} onClick={() => nav('/app/cards')} />
             <IconTile icon={Mail} label={t('feature.feedback')} locked={lockedOf('feedback')} onClick={() => nav('/app/feedback')} />
             <IconTile icon={ShoppingBag} label={t('feature.businesses')} locked={lockedOf('businesses')} onClick={() => nav('/app/businesses')} />
             <IconTile icon={Info} label={t('home.estateInfo')} onClick={() => setInfo(true)} />
-          </div>
-        </Card>
+          </Card>
+        </Section>
         <Announcements />
       </div>
+
       <Sheet open={info} onClose={() => setInfo(false)} title={t('home.estateInfo')}>
-        <ul className="space-y-3 text-sm">
-          <li className="rounded-xl bg-paper p-3"><b>{t('home.info.office')}</b><br />{t('home.info.officeHours')}</li>
-          <li className="rounded-xl bg-paper p-3"><b>{t('home.info.security')}</b><br />0812-1000-2001 · 24 jam</li>
-          <li className="rounded-xl bg-paper p-3"><b>{t('home.info.garbage')}</b><br />{t('home.info.garbageDays')}</li>
+        <ul className="divide-y divide-line text-sm">
+          <li className="py-3"><p className="font-semibold">{t('home.info.office')}</p><p className="text-ink/60">{t('home.info.officeHours')}</p></li>
+          <li className="py-3"><p className="font-semibold">{t('home.info.security')}</p><p className="text-ink/60">{t('home.info.securityLine')}</p></li>
+          <li className="py-3"><p className="font-semibold">{t('home.info.garbage')}</p><p className="text-ink/60">{t('home.info.garbageDays')}</p></li>
         </ul>
       </Sheet>
+      <HomeSearchSheet open={search} onClose={() => setSearch(false)} />
     </div>
   );
 }

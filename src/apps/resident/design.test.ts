@@ -25,6 +25,9 @@ export const REFRESHED: string[] = [
   'src/apps/resident/home/OnboardingCard.tsx',
   'src/apps/resident/home/StatusCards.tsx',
   'src/apps/resident/PrepayGrid.tsx',
+  // Task 5
+  'src/apps/resident/home/SubsidizedHome.tsx',
+  'src/apps/resident/home/RenterHome.tsx',
 ];
 
 const RULES: [string, RegExp][] = [
