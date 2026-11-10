@@ -56,3 +56,20 @@ test("a premium card's own padding replaces the default, so flush cards (p-0) re
   expect(compact).not.toContain('p-4');
   expect(plain).toContain('p-4');
 });
+
+test('the language toggle, photo picker and timeline show no text below 12px in the customer app, and keep their look elsewhere', async () => {
+  const { LangToggle } = await import('./LangToggle');
+  const { PhotoPicker } = await import('./PhotoPicker');
+  const { Timeline } = await import('./Timeline');
+  const items = [{ key: 'a', label: 'Dikirim', meta: '10 Nov', state: 'done' as const }, { key: 'b', label: 'Gagal', state: 'failed' as const }];
+  const node = (
+    <>
+      <LangToggle />
+      <PhotoPicker samples={['DAMP']} onPicked={() => undefined} />
+      <Timeline items={items} />
+    </>
+  );
+  const small = /text-\[(9|10|10\.5|11)px\]/;
+  expect((await render(<UiFlavor value="premium">{node}</UiFlavor>)).innerHTML).not.toMatch(small);
+  expect((await render(node)).innerHTML).toMatch(small);
+});

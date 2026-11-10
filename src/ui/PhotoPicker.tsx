@@ -4,12 +4,14 @@ import { hashString, type PhotoStats } from '../domain/ai';
 import { useT } from '../i18n';
 import { savePhoto } from '../store/photos';
 import { cx } from './cx';
+import { useFlavor } from './flavor';
 import { Photo } from './Photo';
 
 export interface PickedPhoto { id: string; hash: string; stats?: PhotoStats }
 
 /** Camera / upload (compressed to ≤1000 px) plus a strip of bundled sample photos. */
 export function PhotoPicker({ onPicked, samples = [], className, selectedId }: { onPicked: (p: PickedPhoto) => void; samples?: string[]; className?: string; selectedId?: string }) {
+  const premium = useFlavor() === 'premium';
   const t = useT();
   const camera = useRef<HTMLInputElement>(null);
   const upload = useRef<HTMLInputElement>(null);
@@ -39,14 +41,14 @@ export function PhotoPicker({ onPicked, samples = [], className, selectedId }: {
       <input ref={upload} type="file" accept="image/*" hidden onChange={(e) => onFile(e.target.files?.[0])} />
       {samples.length > 0 && (
         <>
-          <p className="mb-1.5 mt-3 text-[11px] font-semibold uppercase tracking-wide text-ink/40">{t('ui.photo.samples')}</p>
+          <p className={cx('mb-1.5 mt-3 uppercase tracking-wide text-ink/40', premium ? 'text-xs font-medium' : 'text-[11px] font-semibold')}>{t('ui.photo.samples')}</p>
           <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
             {samples.map((s) => {
               const id = `sample:${s}`;
               return (
                 <button key={s} type="button" onClick={() => onPicked({ id, hash: String(hashString(id)) })} className={cx('shrink-0 rounded-xl p-0.5 ring-2 transition', selectedId === id ? 'ring-brand' : 'ring-transparent')}>
                   <Photo id={id} className="h-16 w-20 rounded-[10px]" />
-                  <span className="mt-0.5 block text-[10px] font-semibold text-ink/55">{t(`sample.${s}`)}</span>
+                  <span className={cx('mt-0.5 block text-ink/55', premium ? 'max-w-[80px] truncate text-xs font-medium' : 'text-[10px] font-semibold')}>{t(`sample.${s}`)}</span>
                 </button>
               );
             })}

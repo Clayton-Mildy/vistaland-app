@@ -110,7 +110,7 @@ function IplTab({ onPay, openPrepay, switcher }: { onPay: (i: PayIntent) => void
   const payableTotal = payable.reduce((a, b) => a + b.amount, 0);
   // The band's key figure: the amount to pay, else the free or paid-through month.
   let head: { figure: string; sub: string };
-  if (overdue.length) head = { figure: formatRp(payableTotal), sub: t('bills.head.overdue', { n: overdue.length }) };
+  if (overdue.length) head = { figure: formatRp(payableTotal), sub: due.length ? t('bills.head.overduePlus', { n: overdue.length, month: formatDate(due[0].month, lang, 'month') }) : t('bills.head.overdue', { n: overdue.length }) };
   else if (first > current) head = { figure: t('bills.hero.free', { month: formatDate(lastFree ?? first, lang, 'month') }), sub: t('bills.hero.freeBody', { month: formatDate(first, lang, 'month'), due: formatDate(dayOfMonth(first, s.ipl.dueDay), lang), rate: formatRp(rate) }) };
   else if (due.length) head = { figure: formatRp(payableTotal), sub: t('bills.head.due', { date: formatDate(dayOfMonth(due[0].month, s.ipl.dueDay), lang) }) };
   else head = { figure: t('bills.hero.paid', { month: formatDate(paidThrough ?? current, lang, 'month') }), sub: t('bills.hero.paidBody', { rate: formatRp(rate) }) };

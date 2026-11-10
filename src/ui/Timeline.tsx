@@ -1,10 +1,12 @@
 import { Check } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cx } from './cx';
+import { useFlavor } from './flavor';
 
 export interface TimelineItem { key: string; label: ReactNode; meta?: ReactNode; state: 'done' | 'current' | 'todo' | 'failed'; children?: ReactNode }
 
 export function Timeline({ items, className }: { items: TimelineItem[]; className?: string }) {
+  const premium = useFlavor() === 'premium';
   return (
     <ol className={cx('relative', className)}>
       {items.map((it, i) => (
@@ -20,12 +22,12 @@ export function Timeline({ items, className }: { items: TimelineItem[]; classNam
             )}
           >
             {it.state === 'done' && <Check className="h-3 w-3" strokeWidth={3} />}
-            {it.state === 'failed' && <span className="text-[10px] font-bold">!</span>}
+            {it.state === 'failed' && <span className={premium ? 'text-xs font-semibold leading-none' : 'text-[10px] font-bold'}>!</span>}
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2">
               <span className={cx('text-sm', it.state === 'todo' ? 'text-ink/40' : 'font-semibold text-ink')}>{it.label}</span>
-              {it.meta && <span className="shrink-0 text-[11px] text-ink/45">{it.meta}</span>}
+              {it.meta && <span className={cx('shrink-0 text-ink/45', premium ? 'text-xs tabular' : 'text-[11px]')}>{it.meta}</span>}
             </div>
             {it.children}
           </div>

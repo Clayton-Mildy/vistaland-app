@@ -55,3 +55,10 @@ test('a renter only sees, and is only asked to pay, the months billed to them', 
   expect(el.textContent).not.toContain('tertunggak');
   root.unmount();
 });
+
+test('when overdue months and the current bill are paid together, the title band says so instead of calling it all arrears', async () => {
+  const { el, root } = await render();
+  expect(el.querySelector('header')!.textContent).toContain('Rp1.050.000');
+  expect(el.querySelector('header')!.textContent).toContain('2 bulan tertunggak + Nov 2026');
+  root.unmount();
+});

@@ -12,6 +12,7 @@ export default {
   "bills.hero.paid": "Lunas s/d {month}",
   "bills.hero.paidBody": "Terima kasih! Tarif {rate}/bulan.",
   "bills.head.overdue": "{n} bulan tertunggak · tanpa denda",
+  "bills.head.overduePlus": "{n} bulan tertunggak + {month} · tanpa denda",
   "bills.head.due": "Jatuh tempo {date} · tanpa denda",
   "bills.rateLine": "Tarif IPL {type}: {rate}/bulan",
   "bills.payMonths": "IPL {months}",

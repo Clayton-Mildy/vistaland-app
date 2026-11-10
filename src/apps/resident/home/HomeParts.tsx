@@ -5,7 +5,7 @@ import { formatDate } from '../../../domain/clock';
 import { formatRp } from '../../../domain/money';
 import { nextOnboardingStep, onboardingSteps } from '../../../domain/onboarding';
 import { useLang, useT } from '../../../i18n';
-import { useData, useNotifications, useResident } from '../../../store/hooks';
+import { useAccess, useData, useNotifications, useResident } from '../../../store/hooks';
 import { Button } from '../../../ui/Button';
 import { Sheet } from '../../../ui/Sheet';
 import { STEP_ROUTE } from '../auth/Welcome';
@@ -20,6 +20,9 @@ export function HomeTopRow({ onSearch }: { onSearch: () => void }) {
   const nav = useNavigate();
   const ctx = useResident()!;
   const unread = useNotifications(ctx.recipientKey).filter((n) => !n.read).length;
+  // Same rule as the /app/emergency route: open, or locked only until move-in. Subsidized projects have no panic button.
+  const panic = useAccess()('panic');
+  const sos = panic.ok || panic.reason === 'notOccupied';
   return (
     <div className="flex items-center gap-2">
       <button onClick={onSearch} className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full bg-white/[0.14] px-3.5 text-left text-sm text-white/75 transition hover:bg-white/20">
@@ -29,9 +32,11 @@ export function HomeTopRow({ onSearch }: { onSearch: () => void }) {
         <Bell className="h-5 w-5" />
         {unread > 0 && <span className="absolute right-0 top-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-gold px-1 text-xs font-semibold leading-none text-ink">{unread}</span>}
       </button>
-      <button onClick={() => nav('/app/emergency')} className="flex items-center gap-1 rounded-full border border-white/60 px-2.5 py-1 text-xs font-semibold text-white hover:bg-white/10">
-        <Siren className="h-3.5 w-3.5" /> SOS
-      </button>
+      {sos && (
+        <button onClick={() => nav('/app/emergency')} className="flex items-center gap-1 rounded-full border border-white/60 px-2.5 py-1 text-xs font-semibold text-white hover:bg-white/10">
+          <Siren className="h-3.5 w-3.5" /> SOS
+        </button>
+      )}
     </div>
   );
 }

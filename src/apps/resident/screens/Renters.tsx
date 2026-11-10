@@ -44,9 +44,11 @@ export default function Renters() {
           </Card>
         ))}
         {regs.length === 0 && renters.length === 0 && <Card><EmptyState title={t('renters.emptyTitle')} body={t('renters.emptyBody')} action={<Button onClick={() => nav('/app/renters/new')}>{t('renters.new')}</Button>} /></Card>}
-        {regs.length > 0 && <h3 className="px-1 pt-2 text-base font-semibold">{t('renters.registrations')}</h3>}
+        {regs.length > 0 && (
+          <Card className="divide-y divide-line p-0">
+            <h3 className="px-4 pb-2 pt-4 text-base font-semibold">{t('renters.registrations')}</h3>
         {regs.map((r) => (
-          <Card key={r.id}>
+          <div key={r.id} className="px-4 py-3.5">
             <div className="flex items-center justify-between gap-3">
               <span className="font-semibold">{r.person.name}</span>
               <StatusPill tone={TONE[r.status]}>{t(`renters.status.${r.status}`)}</StatusPill>
@@ -58,8 +60,10 @@ export default function Renters() {
               {r.status === 'needsFix' && <Button size="sm" variant="secondary" onClick={() => nav(`/app/renters/new?fix=${r.id}`)}>{t('renters.fix')}</Button>}
               {r.status === 'submitted' && r.feePaid && <span className="text-xs text-ink/50">{t('renters.waiting')}</span>}
             </div>
-          </Card>
+          </div>
         ))}
+          </Card>
+        )}
       </ScreenBody>
       {payReg && (
         <PaySheet open onClose={() => setPayId(null)} title={t('renters.payTitle')} amount={payReg.fee} vaSeed={code(payReg.unitId)} onPay={() => { const r = run(payRegistrationFee, { id: payReg.id }); return r.ok ? null : r.error; }} />

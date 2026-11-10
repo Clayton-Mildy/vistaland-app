@@ -12,6 +12,7 @@ export default {
   "bills.hero.paid": "Paid through {month}",
   "bills.hero.paidBody": "Thank you! Rate {rate}/month.",
   "bills.head.overdue": "{n} months overdue · no late fee",
+  "bills.head.overduePlus": "{n} months overdue + {month} · no late fee",
   "bills.head.due": "Due {date} · no late fee",
   "bills.rateLine": "IPL rate for {type}: {rate}/month",
   "bills.payMonths": "IPL {months}",
