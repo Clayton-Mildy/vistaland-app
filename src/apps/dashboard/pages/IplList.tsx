@@ -46,7 +46,7 @@ export default function IplList() {
   const [page, setPage] = useState(0);
   const data = useDerived((d) => {
     const s = d.projects.find((p) => p.id === project.id)!.settings;
-    const rows = unitBillingRows(d, project.id).map((r) => ({ ...r, state: iplState(r.bills, d.today, s.ipl.dueDay) }));
+    const rows = unitBillingRows(d, project.id).map((r) => ({ ...r, state: iplState(r.bills, d.today, s.ipl.dueDay, r.freeUntil) }));
     const current = monthOf(d.today);
     const months: MonthKey[] = Array.from({ length: 12 }, (_, i) => addMonths(current, i - 10));
     return { rows, snap: iplSnapshot(d, project.id), today: d.today, dueDay: s.ipl.dueDay, flagMonths: s.overdue.flagMonths, months };
@@ -124,7 +124,7 @@ export default function IplList() {
               { key: 'bast', header: 'BAST', render: (r) => <span className="text-xs">{r.unit.handover.bastDate ? formatDate(r.unit.handover.bastDate, lang, 'short') : '—'}</span> },
               { key: 'move', header: t('dash.ipl.col.moveIn'), render: (r) => <span className="text-xs">{r.unit.moveIn ? formatDate(r.unit.moveIn.date, lang, 'short') : '—'}</span> },
               { key: 'free', header: t('dash.ipl.col.freeUntil'), render: (r) => <span className="text-xs">{r.freeUntil ? formatDate(r.freeUntil, lang, 'month') : '—'}</span> },
-              { key: 'ipl', header: 'IPL', render: (r) => (r.unit.handover.bastDate ? <IplPill bills={r.bills} today={data.today} dueDay={data.dueDay} /> : <StatusPill>{t('dash.ipl.notHandedOver')}</StatusPill>) },
+              { key: 'ipl', header: 'IPL', render: (r) => (r.unit.handover.bastDate ? <IplPill bills={r.bills} today={data.today} dueDay={data.dueDay} freeUntil={r.freeUntil} /> : <StatusPill>{t('dash.ipl.notHandedOver')}</StatusPill>) },
               { key: 'od', header: t('dash.ipl.col.overdue'), align: 'right', render: (r) => (r.overdueAmount ? <b className="tabular text-[#B4192A]">{formatRp(r.overdueAmount)}</b> : <span className="text-ink/30">—</span>) },
               { key: 'flag', header: t('dash.ipl.col.action'), render: (r) => (r.needsAction ? <StatusPill tone="danger" dot>{t('dash.ipl.flag')}</StatusPill> : null) },
               { key: 'cns', header: t('dash.ipl.col.consequences'), render: (r) => <ConsequencePills r={r} /> },

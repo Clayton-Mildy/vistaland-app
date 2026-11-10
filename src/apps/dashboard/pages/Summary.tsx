@@ -1,3 +1,4 @@
+import { freeUntilMonth } from '../../../domain/ipl';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../../../domain/clock';
@@ -95,7 +96,7 @@ export default function Summary() {
             { key: 'rules', header: t('dash.col.rules'), render: (r) => (r.u.rules ? t('dash.yes.rules') : <span className="font-semibold text-[#B4192A]">{t('dash.no')}</span>) },
             { key: 'movein', header: t('dash.col.moveIn'), render: (r) => (r.u.moveIn ? formatDate(r.u.moveIn.date, lang) : r.permit ? t('dash.scheduled', { date: formatDate(r.permit.date, lang, 'short') }) : '—') },
             { key: 'source', header: t('dash.col.source'), render: (r) => <span className="text-xs text-ink/60">{r.u.moveIn ? t(`movein.source.${r.u.moveIn.source}`) : r.permit ? t('dash.source.permit') : '—'}</span> },
-            { key: 'ipl', header: 'IPL', render: (r) => <IplPill bills={r.bills} today={data.today} dueDay={project.settings.ipl.dueDay} /> },
+            { key: 'ipl', header: 'IPL', render: (r) => <IplPill bills={r.bills} today={data.today} dueDay={project.settings.ipl.dueDay} freeUntil={r.u.handover.bastDate ? freeUntilMonth(r.u.handover.bastDate, project.settings.ipl) : undefined} /> },
           ]}
         />
       </Panel>

@@ -6,7 +6,7 @@ import { formatRp } from '../../../domain/money';
 import type { RenovationStep } from '../../../domain/types';
 import { useLang, useT } from '../../../i18n';
 import { objectRenovation, payDeposit, requestInspection, setRefundAccount, signRenovationBast } from '../../../store/actions';
-import { useData, useRun } from '../../../store/hooks';
+import { useData, useResident, useRun } from '../../../store/hooks';
 import { AppBar } from '../../../ui/AppBar';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
@@ -22,7 +22,9 @@ export default function RenovationDetail() {
   const run = useRun();
   const toast = useToast();
   const { id } = useParams();
-  const r = useData((d) => d.renovations.find((x) => x.id === id));
+  const ctx = useResident();
+  // Only this unit's renovations; a renter sees only the requests they made.
+  const r = useData((d) => d.renovations.find((x) => x.id === id && x.unitId === ctx?.unit.id && (!ctx?.renter || x.renterId === ctx.renter.id)));
   const [account, setAccount] = useState(r?.refundAccount ?? '');
   const [objecting, setObjecting] = useState(false);
   const [objection, setObjection] = useState('');

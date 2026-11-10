@@ -76,7 +76,7 @@ export default function Handover() {
           </Card>
         )}
 
-        {lastCall && !h.bastDate && (
+        {lastCall && !h.bastDate && (!h.slot || changing) && (
           <Card>
             <div className="flex items-center justify-between">
               <StatusPill tone="info">{t('handover.call', { n: lastCall.n, max: ctx.settings.handover.maxCalls })}</StatusPill>
