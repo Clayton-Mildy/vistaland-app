@@ -35,7 +35,7 @@ export function ResidentShell() {
         <nav className="border-t border-line bg-white pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
           <div className="flex">
             {TABS.map(({ to, icon: Icon, key }) => (
-              <NavLink key={to} to={to} className={({ isActive }) => cx('flex flex-1 flex-col items-center gap-0.5 py-1 text-[10.5px] font-semibold', isActive ? 'text-brand' : 'text-ink/45')}>
+              <NavLink key={to} to={to} className={({ isActive }) => cx('flex flex-1 flex-col items-center gap-0.5 py-1 text-xs font-medium', isActive ? 'text-brand' : 'text-ink/45')}>
                 <Icon className="h-[22px] w-[22px]" strokeWidth={2} />
                 {t(key)}
               </NavLink>

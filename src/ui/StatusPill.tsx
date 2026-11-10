@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { cx } from './cx';
+import { useFlavor } from './flavor';
 
 export type PillTone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'info' | 'gold' | 'violet';
 const TONE: Record<PillTone, string> = {
@@ -14,8 +15,9 @@ const TONE: Record<PillTone, string> = {
 };
 
 export function StatusPill({ tone = 'neutral', children, className, dot }: { tone?: PillTone; children: ReactNode; className?: string; dot?: boolean }) {
+  const premium = useFlavor() === 'premium';
   return (
-    <span className={cx('inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold leading-5', TONE[tone], className)}>
+    <span className={cx('inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 ', premium ? 'text-xs font-medium' : 'text-[11px] font-semibold', 'leading-5', TONE[tone], className)}>
       {dot && <span className="h-1.5 w-1.5 rounded-full bg-current" />}
       {children}
     </span>

@@ -4,14 +4,15 @@ import type { Listing } from '../../domain/types';
 import type { TFn } from '../../i18n';
 import type { PillTone } from '../../ui/StatusPill';
 import type { Tone } from '../../ui/theme';
+import { HandHelping, Home, Info, Search, Tag, type LucideIcon } from 'lucide-react';
 
-export const KIND_META: Record<Listing['kind'], { pill: PillTone; tone: Tone }> = {
-  rumahDisewakan: { pill: 'brand', tone: 'red' },
-  rumahDijual: { pill: 'brand', tone: 'red' },
-  dijual: { pill: 'success', tone: 'green' },
-  dicari: { pill: 'info', tone: 'blue' },
-  jasa: { pill: 'gold', tone: 'yellow' },
-  info: { pill: 'neutral', tone: 'grey' },
+export const KIND_META: Record<Listing['kind'], { pill: PillTone; tone: Tone; icon: LucideIcon }> = {
+  rumahDisewakan: { pill: 'brand', tone: 'red', icon: Home },
+  rumahDijual: { pill: 'brand', tone: 'red', icon: Home },
+  dijual: { pill: 'success', tone: 'green', icon: Tag },
+  dicari: { pill: 'info', tone: 'blue', icon: Search },
+  jasa: { pill: 'gold', tone: 'yellow', icon: HandHelping },
+  info: { pill: 'neutral', tone: 'grey', icon: Info },
 };
 export const isHouse = (k: Listing['kind']) => k === 'rumahDisewakan' || k === 'rumahDijual';
 export const priceText = (l: Pick<Listing, 'price' | 'priceUnit'>, t: TFn) =>
