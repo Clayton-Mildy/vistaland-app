@@ -10,7 +10,7 @@ import { addFinding, assignMandor, createWorkGroup, estateFinalOk, estateVerifyF
 import { claimVoucher, postListing, replyFeedback, sendFeedback, submitLead } from './community';
 import { setToday } from './demo';
 import { addExpense } from './finance';
-import { addFuelEntry, logMowing } from './gardener';
+import { addFuelEntry, logMowing, rephotoMowingLog } from './gardener';
 import { estateDecideRenovation, ownerDecideRenovation, payDeposit, requestInspection, requestRenovation, returnDeposit, signRenovationBast, submitInspection } from './renovations';
 import { payRegistrationFee, reviewRegistration, submitRegistration } from './renters';
 
@@ -149,4 +149,12 @@ describe('J10 gardener → finance', () => {
     d = apply(d, addExpense, { projectId: 'vh', category: 'listrik', date: d.today, amount: 200000, note: 'Token', recurring: false });
     expect(d.expenses.at(-1)!.source).toBe('manual');
   });
+});
+
+test('gardener re-photo puts a rejected log back in the review queue', () => {
+  const seed = buildSeed();
+  const log = seed.mowingLogs.find((l) => l.status === 'rephoto')!;
+  const d = apply(seed, rephotoMowingLog, { id: log.id, afterPhotoId: 'sample:LAWN_AFTER' });
+  expect(d.mowingLogs.find((l) => l.id === log.id)).toMatchObject({ status: 'pending', afterPhotoId: 'sample:LAWN_AFTER' });
+  expect(d.notifications.some((n) => n.to === 'admin:vh' && n.text.key === 'notif.admin.mowingLogged')).toBe(true);
 });

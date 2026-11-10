@@ -32,17 +32,20 @@ export default function Emergency() {
   const signal = sent ?? ongoing;
   const staff = useData((d) => d.staff);
 
+  // Latest values for the timer callback, so the countdown effect depends on the countdown alone.
+  const latest = useRef({ ctx, type, away });
+  latest.current = { ctx, type, away };
   useEffect(() => {
     if (countdown === null) return;
-    if (countdown === 0) {
-      run(triggerPanic, { unitId: ctx.unit.id, from: ctx.identity, type, awayFromHome: away });
-      setSentId(useStore.getState().data.panics.at(-1)!.id);
+    timer.current = window.setTimeout(() => {
+      if (countdown > 1) return setCountdown(countdown - 1);
       setCountdown(null);
-      return;
-    }
-    timer.current = window.setTimeout(() => setCountdown(countdown - 1), 1000);
+      const { ctx: c, type: ty, away: aw } = latest.current;
+      run(triggerPanic, { unitId: c.unit.id, from: c.identity, type: ty, awayFromHome: aw });
+      setSentId(useStore.getState().data.panics.at(-1)!.id);
+    }, 1000);
     return () => window.clearTimeout(timer.current);
-  }, [countdown, run, ctx, type, away]);
+  }, [countdown, run]);
 
   const pickType = (k: NonNullable<PanicSignal['type']>) => {
     setType(k);

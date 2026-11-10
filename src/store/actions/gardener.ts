@@ -34,3 +34,13 @@ export const reviewMowingLog: Action<{ id: string; decision: 'approved' | 'repho
   log.note = p.note;
   if (p.decision === 'rephoto') notify(d, `staff:${log.gardenerId}`, 'notif.gardener.rephoto', { date: log.date }, '/staff/garden/history');
 };
+
+/** Gardener retakes the after-photo the estate rejected; the log goes back for review. */
+export const rephotoMowingLog: Action<{ id: string; afterPhotoId: string }> = (d, p) => {
+  const log = d.mowingLogs.find((l) => l.id === p.id);
+  if (!log) throw new ActionError('error.notFound');
+  log.afterPhotoId = p.afterPhotoId;
+  log.status = 'pending';
+  const zone = d.zones.find((z) => z.id === log.zoneId)!;
+  notify(d, `admin:${zone.projectId}`, 'notif.admin.mowingLogged', { zone: zone.name }, '/dashboard/finance');
+};
