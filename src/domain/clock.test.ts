@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { addDays, addMonths, dayOfMonth, diffDays, formatDate, monthOf, monthStart } from './clock';
+import { addDays, addMonths, addMonthsToDate, dayOfMonth, diffDays, formatDate, monthOf, monthStart } from './clock';
 
 describe('clock', () => {
   test('addDays crosses month and year boundaries', () => {
@@ -16,6 +16,10 @@ describe('clock', () => {
     expect(monthOf('2026-03-05')).toBe('2026-03');
     expect(monthStart('2026-09')).toBe('2026-09-01');
     expect(dayOfMonth('2026-09', 10)).toBe('2026-09-10');
+  });
+  test('addMonthsToDate keeps the day and clamps short months', () => {
+    expect(addMonthsToDate('2026-11-10', 1)).toBe('2026-12-10');
+    expect(addMonthsToDate('2027-01-31', 1)).toBe('2027-02-28');
   });
   test('formatDate uses id-ID style in both languages', () => {
     expect(formatDate('2026-11-10', 'id', 'long')).toBe('10 Nov 2026');

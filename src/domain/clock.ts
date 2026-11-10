@@ -57,3 +57,13 @@ export const formatMonthLong = (m: MonthKey, lang: Lang) => formatDate(m, lang, 
 export const dayName = (d: ISODate, lang: Lang) => DAYS[lang][weekday(d)];
 export const formatTime = (dt: ISODateTime) => dt.slice(11, 16).replace(':', '.');
 export const formatDateTime = (dt: ISODateTime, lang: Lang) => `${formatDate(dt.slice(0, 10), lang, 'long')} · ${formatTime(dt)}`;
+
+const daysIn = (m: MonthKey) => {
+  const [y, mo] = m.split('-').map(Number);
+  return new Date(Date.UTC(y, mo, 0)).getUTCDate();
+};
+/** Same day n months later, clamped to the month's last day. */
+export function addMonthsToDate(d: ISODate, n: number): ISODate {
+  const m = addMonths(monthOf(d), n);
+  return dayOfMonth(m, Math.min(Number(d.slice(8, 10)), daysIn(m)));
+}
