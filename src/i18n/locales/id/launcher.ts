@@ -18,6 +18,9 @@ export default {
   'demo.back': 'Kembali ke beranda prototipe', 'demo.left': 'Layar kiri', 'demo.resident': 'Warga', 'demo.staff': 'Petugas',
   'demo.view': 'Tampilan',
   'demo.view.split': 'Berdampingan',
-  'demo.view.phone': 'HP saja',
-  'demo.view.dashboard': 'Dashboard saja',
+  'demo.view.phone': 'Aplikasi',
+  'demo.view.dashboard': 'Dashboard',
+  'demo.tweaks': 'Kontrol demo',
+  'demo.tweaksOpen': 'Buka kontrol demo',
+  'demo.phoneApp': 'Aplikasi di HP',
 } as Record<string, string>;

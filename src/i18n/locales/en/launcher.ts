@@ -18,6 +18,9 @@ export default {
   'demo.back': 'Back to the prototype home', 'demo.left': 'Left screen', 'demo.resident': 'Resident', 'demo.staff': 'Staff',
   'demo.view': 'View',
   'demo.view.split': 'Side by side',
-  'demo.view.phone': 'Phone only',
-  'demo.view.dashboard': 'Dashboard only',
+  'demo.view.phone': 'App',
+  'demo.view.dashboard': 'Dashboard',
+  'demo.tweaks': 'Demo controls',
+  'demo.tweaksOpen': 'Open demo controls',
+  'demo.phoneApp': 'Phone app',
 } as Record<string, string>;

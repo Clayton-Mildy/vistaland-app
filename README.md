@@ -5,7 +5,7 @@ A clickable, fully working prototype of **VHome**: the resident app for Vistalan
 - **Resident app** (`/app`): built as a phone app. The **commercial** project (Vista Harmoni Residence, red) gets the full app. The **subsidized** project (Harmoni Park Cibitung, teal) gets a simpler version. Which one you see depends on who logs in.
 - **Field-staff app** (`/staff`): security post, contractor foreman, gardener.
 - **Estate dashboard** (`/dashboard`): occupancy, handover, residents and renters, leads, IPL billing, pay-ahead offers, complaints and renovation, cards and arrears, finance, security, community, monthly report, settings.
-- **Demo view** (`/demo`): the phone (resident or staff) next to the dashboard, so you can watch changes travel between them. The **Tampilan** switch shows both side by side, the phone only (scaled to fill the window) or the dashboard only; both stay loaded, so switching keeps logins and scroll position. Links like `/demo?view=phone` or `/demo?view=dashboard` open straight into one view.
+- **Demo view** (`/demo`): on a laptop, the phone (resident or staff) next to the dashboard, so you can watch changes travel between them. The floating **Demo** button (bottom right) opens the demo controls: the view (side by side, app only, or dashboard only, each filling the screen), which app the phone shows, the demo date, reset and language. Hidden screens stay loaded, so switching keeps logins and scroll position, and links like `/demo?view=phone` or `/demo?view=dashboard` open straight into one view. On a phone, `/demo` opens the customer app full screen, with the same **Demo** button for the date, reset and language.
 
 Indonesian is the default language. Every screen has an ID / EN toggle.
 
@@ -63,7 +63,7 @@ Data is saved in the browser (`localStorage`, key `vhome.data.v1`; photos in Ind
 
 ## Demo script (journeys 1–11)
 
-Use `/demo`. The left phone switches between **Warga** (resident) and **Petugas** (staff); the right side is the dashboard. Each journey starts from fresh data (**Reset data**).
+Use `/demo` on a laptop. The **Demo** button switches the phone between **Warga** (resident) and **Petugas** (staff); the right side is the dashboard. Each journey starts from fresh data (**Reset data** in the same panel).
 
 1. **Onboarding unlocks the app (Rina).** Log in as Rina → welcome → *Peraturan*: sign → *Pindahan*: pick today, tick "Sekalian pasang WiFi" → *Ajukan izin*. Switch to Petugas → Pak Dedi → *Pindahan hari ini* → **Sudah masuk**. Back on Rina, the locked tiles open. Dashboard → *Ringkasan*: B1/02 shows "Konfirmasi security".
 2. **Handover (dashboard → resident).** Dashboard → *Serah terima* → **Unit siap serah terima** → *Tandai siap* on the first unit, A1/10 (call 1 goes out). Log in as its owner, Umi Firmansyah (`0813-5100-0266` / `3275590332852992`), open *Serah terima*, pick a slot. Dashboard → **Buka form** → **Kirim tanda terima**. Resident → **Lihat & tanda tangani BAST** → enter the code. Free IPL and the 100-day complaint window now start from today (see *Tagihan* and *Komplain*).
