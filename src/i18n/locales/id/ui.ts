@@ -7,4 +7,7 @@ export default {
   'sample.SELFIE': 'Selfie', 'sample.RECEIPT': 'Struk SPBU', 'sample.LAWN_BEFORE': 'Rumput tinggi', 'sample.LAWN_AFTER': 'Rumput rapi', 'sample.LEASE': 'Perjanjian sewa',
   'demo.today': 'Tanggal demo', 'demo.plusDay': '+1 hari', 'demo.plusWeek': '+1 minggu', 'demo.plusMonth': '+1 bulan', 'demo.plus100': '+100 hari',
   'demo.reset': 'Reset data', 'demo.resetConfirm': 'Kembalikan semua data demo ke awal? Perubahan yang Anda buat akan hilang.', 'demo.resetDone': 'Data demo dikembalikan ke awal.',
+  'demo.asideTitle': 'Mode demo',
+  'demo.asideBody': 'Data contoh di browser ini. Majukan tanggal demo untuk melihat tagihan, panggilan, dan masa komplain berubah.',
+  'demo.openSideBySide': 'Buka berdampingan dengan dashboard',
 } as Record<string, string>;

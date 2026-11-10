@@ -35,8 +35,15 @@ export default function Login() {
     if (phone.replace(/\D/g, '').length < 9) return setError(t('login.error.phone'));
     if (ktp.replace(/[\s.\-]/g, '').length < 6) return setError(t('login.error.ktp'));
     setBusy(true);
-    const r = await resolveResident(useStore.getState().data, phone, ktp);
-    setBusy(false);
+    let r: Awaited<ReturnType<typeof resolveResident>>;
+    try {
+      r = await resolveResident(useStore.getState().data, phone, ktp);
+    } catch {
+      // The purchase-record service (VLES) didn't answer: let the resident try again.
+      return setError(t('login.error.service'));
+    } finally {
+      setBusy(false);
+    }
     if (!r.ok) return setError(t(`login.error.${r.reason}`));
     nav('/app/otp', { state: { identity: r.identity, unitIds: r.unitIds, phone } });
   };

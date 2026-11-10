@@ -20,7 +20,7 @@ const move = (d: AppData, c: Complaint, findingId: string, stage: FindingStage, 
 const residentOf = (d: AppData, unitId: string) => ownerKey(unitOf(d, unitId).ownerCustomerId);
 
 /** Resident adds a finding to the draft complaint (one submission per window). */
-export const addFinding: Action<{ unitId: string; room: RoomId; photoIds: string[]; description: string; ai: AiResult; manualReview: boolean }> = (d, p) => {
+export const addFinding: Action<{ unitId: string; room: RoomId; photoIds: string[]; photoHash?: string; description: string; ai: AiResult; manualReview: boolean }> = (d, p) => {
   const unit = unitOf(d, p.unitId);
   const s = projectOf(d, unit.projectId).settings;
   if (complaintWindow(unit.handover.bastDate, s.complaints.windowDays, d.today).status !== 'open') throw new ActionError('error.windowClosed');
@@ -32,7 +32,7 @@ export const addFinding: Action<{ unitId: string; room: RoomId; photoIds: string
     d.complaints.push(c);
   }
   c.findings.push({
-    id: `f-${c.id.slice(4)}-${(d.seq.F = (d.seq.F ?? 0) + 1)}`, room: p.room, photoIds: p.photoIds, description: p.description, ai: p.ai,
+    id: `f-${c.id.slice(4)}-${(d.seq.F = (d.seq.F ?? 0) + 1)}`, room: p.room, photoIds: p.photoIds, photoHash: p.photoHash, description: p.description, ai: p.ai,
     manualReview: p.manualReview, category: p.ai.category, checklist: [], fixChecks: [], stage: 'draft', history: [{ stage: 'draft', at: nowISO(d.today), by: 'resident' }],
   });
 };
@@ -54,6 +54,7 @@ export const submitComplaint: Action<{ unitId: string }> = (d, p) => {
 
 export const estateVerifyFinding: Action<{ complaintId: string; findingId: string; category?: ComplaintCategory; room?: RoomId; note?: string }> = (d, p) => {
   const { c, f } = find(d, p.complaintId, p.findingId);
+  if (f.stage !== 'submitted') throw new ActionError('error.alreadyHandled');
   if (p.category) f.category = p.category;
   if (p.room) f.room = p.room;
   if (p.note) f.estateNote = p.note;
@@ -63,13 +64,14 @@ export const estateVerifyFinding: Action<{ complaintId: string; findingId: strin
 
 export const estateRejectFinding: Action<{ complaintId: string; findingId: string; note: string }> = (d, p) => {
   const { c, f } = find(d, p.complaintId, p.findingId);
+  if (f.stage !== 'submitted') throw new ActionError('error.alreadyHandled');
   f.estateNote = p.note;
   move(d, c, f.id, 'rejected', 'estate');
   notify(d, residentOf(d, c.unitId), 'notif.complaint.rejected', { id: c.id }, '/app/complaint/track');
 };
 
 /** Contractor groups similar verified findings across units into one work order. */
-export const createWorkGroup: Action<{ projectId: string; refs: { complaintId: string; findingId: string }[]; material: string; estimateDays: number }> = (d, p) => {
+export const createWorkGroup: Action<{ projectId: string; refs: { complaintId: string; findingId: string }[]; material: string; estimateDays: number; mandorId?: string }> = (d, p) => {
   if (!p.refs.length) throw new ActionError('error.generic');
   const picked = p.refs.map((r) => find(d, r.complaintId, r.findingId).f);
   const first = picked[0];
@@ -78,11 +80,14 @@ export const createWorkGroup: Action<{ projectId: string; refs: { complaintId: s
   const id = nextId(d, 'GRP');
   d.workGroups.push({ id, projectId: p.projectId, category: first.category, refs: p.refs, material: p.material, estimateDays: p.estimateDays, createdAt: nowISO(d.today) });
   for (const r of p.refs) find(d, r.complaintId, r.findingId).f.groupId = id;
+  // Group and assign in one step, so a failure can't leave findings grouped without a foreman.
+  if (p.mandorId) assignMandor(d, { groupId: id, mandorId: p.mandorId });
 };
 
 export const assignMandor: Action<{ groupId: string; mandorId: string }> = (d, p) => {
   const g = d.workGroups.find((x) => x.id === p.groupId);
   if (!g) throw new ActionError('error.notFound');
+  if (g.mandorId) throw new ActionError('error.alreadyHandled');
   g.mandorId = p.mandorId;
   for (const r of g.refs) {
     const { c, f } = find(d, r.complaintId, r.findingId);
@@ -107,6 +112,7 @@ export const toggleChecklistItem: Action<{ complaintId: string; findingId: strin
 /** Mandor's after-photo with the AI fix check: pass → estate final check, fail → back to the mandor. */
 export const submitAfterPhoto: Action<{ complaintId: string; findingId: string; photoId: string; check: Omit<FixCheck, 'at' | 'photoId'> }> = (d, p) => {
   const { c, f } = find(d, p.complaintId, p.findingId);
+  if (f.stage !== 'assigned' && f.stage !== 'inProgress') throw new ActionError('error.alreadyHandled');
   if (f.stage === 'assigned') move(d, c, f.id, 'inProgress', 'mandor');
   f.fixChecks.push({ ...p.check, at: nowISO(d.today), photoId: p.photoId });
   const unit = unitOf(d, c.unitId);

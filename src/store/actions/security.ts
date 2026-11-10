@@ -21,19 +21,26 @@ export const triggerPanic: Action<{ unitId: string; from: ResidentIdentity; type
 export const setPanicType: Action<{ id: string; type: PanicSignal['type'] }> = (d, p) => {
   signal(d, p.id).type = p.type;
 };
+/** A signal is open until it is resolved; another tab may already have handled it. */
+const open = (d: Parameters<Action<unknown>>[0], id: string) => {
+  const s = signal(d, id);
+  if (s.resolvedAt) throw new ActionError('error.alreadyHandled');
+  return s;
+};
 export const cancelPanic: Action<{ id: string }> = (d, p) => {
-  const s = signal(d, p.id);
+  const s = open(d, p.id);
   s.outcome = 'cancelled';
   s.resolvedAt = nowISO(d.today);
 };
 export const acceptPanic: Action<{ id: string; staffId: string }> = (d, p) => {
-  const s = signal(d, p.id);
+  const s = open(d, p.id);
+  if (s.acceptedAt) throw new ActionError('error.alreadyHandled');
   s.acceptedAt = nowISO(d.today);
   s.acceptedBy = p.staffId;
   notify(d, residentKey(s.from), 'notif.panicAccepted', {}, '/app/emergency');
 };
 export const resolvePanic: Action<{ id: string; outcome: 'handled' | 'falseAlarm' }> = (d, p) => {
-  const s = signal(d, p.id);
+  const s = open(d, p.id);
   s.outcome = p.outcome;
   s.resolvedAt = nowISO(d.today);
 };

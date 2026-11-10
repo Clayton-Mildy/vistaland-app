@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { SAMPLE_PHOTOS } from '../data/samples';
-import { analyzeComplaintPhoto, checkFix } from './ai';
+import { analyzeComplaintPhoto, checkFix, fixCheckFor } from './ai';
 
 describe('analyzeComplaintPhoto', () => {
   test('sample photos return their preset', () => {
@@ -44,4 +44,10 @@ describe('checkFix', () => {
   test('every after sample points at a before sample or is WRONG', () => {
     for (const [id, s] of Object.entries(SAMPLE_PHOTOS)) if (s.kind === 'after' && id !== 'WRONG') expect(SAMPLE_PHOTOS[s.base!], id).toBeDefined();
   });
+});
+
+test('an uploaded after-photo that is the resident\'s own photo fails as "same photo"', () => {
+  const finding = { photoIds: ['idb:resident-photo'], photoHash: '9f3a1c' };
+  expect(fixCheckFor(finding, { id: 'idb:mandor-upload', hash: '9f3a1c' })).toMatchObject({ verdict: 'notFixed', noteKey: 'ai.fix.samePhoto' });
+  expect(fixCheckFor(finding, { id: 'idb:mandor-upload', hash: '77b2e0' }).verdict).toBe('fixed');
 });

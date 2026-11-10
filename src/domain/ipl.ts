@@ -80,10 +80,10 @@ export function prepayQuote(pkg: PrepayPackage, rate: number) {
   return { months: pkg.months, gross, discount, net: gross - discount };
 }
 
-/** The next n months from `startFrom` that are billed and still unpaid. */
-export const prepayMonths = (bills: Bill[], startFrom: MonthKey, n: number): MonthKey[] =>
+/** The next n months from `startFrom` that are billed and still unpaid (optionally only one payer's months). */
+export const prepayMonths = (bills: Bill[], startFrom: MonthKey, n: number, payer?: Bill['payer']): MonthKey[] =>
   bills
-    .filter((b) => b.month >= startFrom && !b.free && !b.paymentId)
+    .filter((b) => b.month >= startFrom && !b.free && !b.paymentId && (!payer || b.payer === payer))
     .map((b) => b.month)
     .sort()
     .slice(0, n);
@@ -131,11 +131,18 @@ export function syncAllBills(d: AppData): void {
  * Months a pay-ahead package would cover: the next n billed, unpaid months
  * starting from the current month (or the first billed month, if later).
  */
-export function prepayPlan(unit: Unit, type: UnitType, settings: ProjectSettings, renter: Renter | undefined, bills: Bill[], today: ISODate, n: number): MonthKey[] {
+export function prepayPlan(unit: Unit, type: UnitType, settings: ProjectSettings, renter: Renter | undefined, bills: Bill[], today: ISODate, n: number, payer?: Bill['payer']): MonthKey[] {
   if (!unit.handover.bastDate) return [];
   const current = monthOf(today);
   const first = firstBilledMonth(unit.handover.bastDate, settings.ipl);
   const start = first > current ? first : current;
   const candidates = syncBills(unit, type, settings, renter, bills, today, addMonths(start, n + 1));
+  return prepayMonths(candidates, current, n, payer);
+}
+
+/** The next n WiFi months that are billed and unpaid, looking past free promo months and months already paid. */
+export function wifiPrepayPlan(sub: WifiSub, pkg: WifiPackage, bills: Bill[], today: ISODate, n: number): MonthKey[] {
+  const current = monthOf(today);
+  const candidates = syncWifiBills(sub, pkg, bills, today, addMonths(current, n + 24));
   return prepayMonths(candidates, current, n);
 }

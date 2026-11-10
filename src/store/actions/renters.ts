@@ -34,10 +34,13 @@ export const payRegistrationFee: Action<{ id: string }> = (d, p) => {
   r.feePaid = true;
 };
 
-export const resubmitRegistration: Action<{ id: string; patch: Partial<NewRegistration> }> = (d, p) => {
+/** The owner corrects a registration the estate sent back. Owner, unit and type stay as submitted. */
+export const resubmitRegistration: Action<{ id: string; ownerCustomerId: number; patch: Partial<NewRegistration> }> = (d, p) => {
   const r = d.registrations.find((x) => x.id === p.id);
-  if (!r || r.status !== 'needsFix') throw new ActionError('error.generic');
-  Object.assign(r, p.patch, { status: 'submitted', reviewNote: undefined });
+  if (!r || r.ownerCustomerId !== p.ownerCustomerId) throw new ActionError('error.notFound');
+  if (r.status !== 'needsFix') throw new ActionError('error.generic');
+  const { ownerCustomerId: _o, unitId: _u, type: _t, ...patch } = p.patch;
+  Object.assign(r, patch, { status: 'submitted', reviewNote: undefined });
   notify(d, `admin:${unitOf(d, r.unitId).projectId}`, 'notif.admin.registration', { unit: unitOf(d, r.unitId).code, name: r.person.name }, '/dashboard/residents');
 };
 
@@ -54,6 +57,8 @@ export const reviewRegistration: Action<{ id: string; decision: 'approve' | 'nee
     return;
   }
   if (!r.feePaid) throw new ActionError('error.feeUnpaid');
+  // Another tab may have approved a renter for this unit in the meantime.
+  if (r.type === 'renter' && (unit.renterId || d.renters.some((x) => x.unitId === unit.id && x.status === 'active'))) throw new ActionError('error.unitHasRenter');
   r.status = 'approved';
   if (r.type === 'renter') {
     const renterId = nextId(d, 'r');

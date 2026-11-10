@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { activateApp } from './actions/session';
+import { activateApp, setDashboardProject, startResidentSession } from './actions/session';
 import { setToday } from './actions/demo';
 import { nextId } from './ids';
-import { load, save } from './persist';
+import { load, save, saveSessionChanges, SESSION_KEY, STORAGE_KEY } from './persist';
 import { useStore } from './store';
 import { billStatus } from '../domain/ipl';
 import { buildSeed } from '../data/seed';
@@ -63,4 +63,24 @@ test('nextId continues after the seeded ids', () => {
   const d = structuredClone(buildSeed());
   expect(nextId(d, 'KMP')).toBe('KMP-0148');
   expect(nextId(d, 'KMP')).toBe('KMP-0149');
+});
+
+describe('each tab keeps its own login', () => {
+  test("another tab's login never replaces this tab's, while its data changes still arrive", () => {
+    useStore.getState().run(startResidentSession, { identity: { kind: 'owner', customerId: 1107 }, unitId: 'vh-A1-07' });
+    const mine = useStore.getState().data;
+    // Another tab logs in as Sari and saves a newer state.
+    save({ ...mine, version: mine.version + 1, today: '2026-11-11', session: { ...mine.session, resident: { identity: { kind: 'renter', renterId: 'r-1' }, unitId: 'vh-B2-04' } } });
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY }));
+    expect(useStore.getState().data.today).toBe('2026-11-11');
+    expect(useStore.getState().data.session.resident?.unitId).toBe('vh-A1-07');
+    // An action run after the other tab's write still acts as this tab's resident.
+    useStore.getState().run(setDashboardProject, { projectId: 'hp' });
+    expect(useStore.getState().data.session.resident?.unitId).toBe('vh-A1-07');
+  });
+  test('frames sharing one tab only write the part of the login they changed', () => {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ resident: { identity: { kind: 'owner', customerId: 1107 }, unitId: 'vh-A1-07' }, dashboard: { projectId: 'vh', roleView: 'all' } }));
+    saveSessionChanges({ dashboard: { projectId: 'vh', roleView: 'all' } }, { dashboard: { projectId: 'hp', roleView: 'all' } });
+    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!)).toEqual({ resident: { identity: { kind: 'owner', customerId: 1107 }, unitId: 'vh-A1-07' }, dashboard: { projectId: 'hp', roleView: 'all' } });
+  });
 });

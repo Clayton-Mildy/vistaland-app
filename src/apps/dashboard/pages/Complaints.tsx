@@ -6,7 +6,7 @@ import { formatRp } from '../../../domain/money';
 import { complaintKpis } from '../../../domain/report';
 import type { ComplaintCategory, Renovation } from '../../../domain/types';
 import { useLang, useT } from '../../../i18n';
-import { assignMandor, createWorkGroup, estateDecideRenovation, estateVerifyFinding, requestInspection, returnDeposit } from '../../../store/actions';
+import { createWorkGroup, estateDecideRenovation, estateVerifyFinding, requestInspection, returnDeposit } from '../../../store/actions';
 import { useDashboardProject, useDerived, useRun } from '../../../store/hooks';
 import { useStore } from '../../../store/store';
 import { Button } from '../../../ui/Button';
@@ -274,11 +274,9 @@ function AssignModal({ items, mandors, projectId, onClose, onDone }: { items: Bo
   const [mandorId, setMandorId] = useState(mandors[0]?.id ?? '');
   const category = items[0]?.f.category;
   const submit = () => {
-    const g = run(createWorkGroup, { projectId, refs: items.map((i) => ({ complaintId: i.c.id, findingId: i.f.id })), material: material.trim(), estimateDays: Math.max(1, Number(days) || 1) });
+    const g = run(createWorkGroup, { projectId, refs: items.map((i) => ({ complaintId: i.c.id, findingId: i.f.id })), material: material.trim(), estimateDays: Math.max(1, Number(days) || 1), mandorId });
     if (!g.ok) return toast.show(t(g.error), 'error');
     const groupId = useStore.getState().data.workGroups.at(-1)!.id;
-    const a = run(assignMandor, { groupId, mandorId });
-    if (!a.ok) return toast.show(t(a.error), 'error');
     toast.show(t('dash.cmp.assigned', { id: groupId, n: items.length }));
     onDone();
   };

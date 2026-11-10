@@ -100,4 +100,5 @@ export default {
   "feature.renovation": "Renovasi",
   "feature.complaint": "Komplain garansi",
   "feature.numbers": "Nomor penting",
+  "login.error.service": "Data pembelian sedang tidak bisa dicek. Coba lagi sebentar lagi.",
 } as Record<string, string>;

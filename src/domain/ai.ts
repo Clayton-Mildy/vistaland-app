@@ -52,3 +52,9 @@ export function checkFix(input: { beforePhotoId: string; afterPhotoId: string; a
   const h = hashString(`${input.beforePhotoId}|${input.afterPhotoId}`);
   return { verdict: 'fixed', confidence: 82 + (h % 15), noteKey: 'ai.fix.fixed' };
 }
+
+/** Fix check for a finding: compares the after-photo with the resident's photo by content, not by id. */
+export function fixCheckFor(finding: { photoIds: string[]; photoHash?: string }, after: { id: string; hash?: string }) {
+  const before = finding.photoIds[0];
+  return checkFix({ beforePhotoId: before, afterPhotoId: after.id, afterHash: after.hash, beforeHash: finding.photoHash ?? String(hashString(before)) });
+}

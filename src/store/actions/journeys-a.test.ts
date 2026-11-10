@@ -185,3 +185,67 @@ test('estate only offers the consequence types switched on in settings', () => {
   d = apply(d, applyConsequence, { unitId: 'vh-A1-07', type: 'warningLetter', by: 'Admin Estate' });
   expect(unit(d, 'vh-A1-07').consequences.map((c) => c.type)).toEqual(['warningLetter']);
 });
+
+describe('pay-ahead charges only for months it covers', () => {
+  const wifiPrice = (d: AppData, unitId: string) => {
+    const sub = d.wifi.find((w) => w.unitId === unitId)!;
+    return d.projects.find((p) => p.id === 'vh')!.settings.wifi.packages.find((p) => p.id === sub.packageId)!.price;
+  };
+  test('WiFi 6-month package after paying the current month covers the next 6 billed months', () => {
+    let d = buildSeed();
+    const open = d.bills.filter((b) => b.unitId === 'vh-A1-07' && b.kind === 'wifi' && !b.free && !b.paymentId && b.month <= '2026-11').map((b) => b.month);
+    if (open.length) d = apply(d, payBills, { unitId: 'vh-A1-07', kind: 'wifi', months: open, method: 'va' });
+    d = apply(d, payBills, { unitId: 'vh-A1-07', kind: 'wifi', packageId: 'wifi-6', method: 'va' });
+    const pay = d.payments.at(-1)!;
+    expect(pay.months).toEqual(['2026-12', '2027-01', '2027-02', '2027-03', '2027-04', '2027-05']);
+    expect(pay.amount).toBe(6 * wifiPrice(d, 'vh-A1-07'));
+  });
+  test('WiFi package bought during the free promo skips the free months', () => {
+    let d = apply(buildSeed(), requestWifi, { unitId: 'vh-B1-02', packageId: 'wifi-basic', date: '2026-11-12', time: '09.00–12.00' });
+    d = apply(d, setWifiStatus, { unitId: 'vh-B1-02', status: 'installed' });
+    d = apply(d, payBills, { unitId: 'vh-B1-02', kind: 'wifi', packageId: 'wifi-6', method: 'va' });
+    const pay = d.payments.at(-1)!;
+    expect(pay.months).toHaveLength(6);
+    const bills = d.bills.filter((b) => b.unitId === 'vh-B1-02' && b.kind === 'wifi' && pay.months!.includes(b.month));
+    expect(bills.every((b) => !b.free && b.paymentId === pay.id)).toBe(true);
+    expect(pay.amount).toBe(6 * wifiPrice(d, 'vh-B1-02'));
+  });
+  test('a renter cannot pay or pre-pay months that the owner pays', () => {
+    const d = buildSeed();
+    expect(() => apply(d, payBills, { unitId: 'vh-B2-04', kind: 'ipl', packageId: 'ipl-6', method: 'va', payer: 'renter' })).toThrow('error.prepayLease');
+    const paid = apply(d, payBills, { unitId: 'vh-B2-04', kind: 'ipl', months: ['2026-11', '2026-12'], method: 'va', payer: 'renter' });
+    expect(paid.payments.at(-1)!.months).toEqual(['2026-11']);
+    expect(paid.notifications.at(-1)).toMatchObject({ to: 'renter:r-1', text: { key: 'notif.paymentReceipt' } });
+  });
+  test('the owner paying an owner month gets the receipt, not the renter', () => {
+    const d = apply(buildSeed(), payBills, { unitId: 'vh-B2-04', kind: 'ipl', months: ['2026-12'], method: 'va', payer: 'owner' });
+    expect(d.notifications.at(-1)).toMatchObject({ to: 'owner:1204', text: { key: 'notif.paymentReceipt' } });
+  });
+  test('paying when nothing is left to pay records nothing', () => {
+    const d = buildSeed();
+    const paidMonth = d.bills.find((b) => b.unitId === 'vh-B2-04' && b.kind === 'ipl' && b.paymentId)!.month;
+    expect(() => apply(d, payBills, { unitId: 'vh-B2-04', kind: 'ipl', months: [paidMonth], method: 'va' })).toThrow('error.nothingToPay');
+  });
+});
+
+test('an automatic BAST is dated on its deadline, not on the day the demo clock lands', () => {
+  const d = apply(buildSeed(), setToday, { date: '2027-02-18' });
+  const h = unit(d, 'vh-C1-03').handover;
+  expect(h).toMatchObject({ bastSource: 'auto', bastDate: '2026-11-10' });
+});
+
+test('settings refuse values that would break billing or the resident app', () => {
+  const seed = buildSeed();
+  const bad: Parameters<typeof updateSettings>[1]['patch'][] = [
+    { ipl: { dueDay: 0 } },
+    { ipl: { freeMonths: -1 } },
+    { complaints: { windowDays: 0 } },
+    { cards: { extraCardPrice: -5000 } },
+    { handover: { maxCalls: 0 } },
+    { overdue: { flagMonths: 0 } },
+    { fuel: { litersPer1000m2: 0 } },
+  ];
+  for (const patch of bad) expect(() => apply(seed, updateSettings, { projectId: 'vh', patch }), JSON.stringify(patch)).toThrow('error.outOfRange');
+  expect(() => apply(seed, setUnitTypeRate, { typeId: 'vh-45', rate: 0 })).toThrow('error.outOfRange');
+  expect(apply(seed, updateSettings, { projectId: 'vh', patch: { ipl: { dueDay: 15 } } }).projects.find((p) => p.id === 'vh')!.settings.ipl.dueDay).toBe(15);
+});

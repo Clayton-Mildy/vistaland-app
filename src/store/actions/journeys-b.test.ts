@@ -12,7 +12,7 @@ import { setToday } from './demo';
 import { addExpense } from './finance';
 import { addFuelEntry, logMowing, rephotoMowingLog } from './gardener';
 import { estateDecideRenovation, ownerDecideRenovation, payDeposit, requestInspection, requestRenovation, returnDeposit, signRenovationBast, submitInspection } from './renovations';
-import { payRegistrationFee, reviewRegistration, submitRegistration } from './renters';
+import { payRegistrationFee, resubmitRegistration, reviewRegistration, submitRegistration } from './renters';
 
 beforeAll(() => { vlesConfig.latencyMs = [0, 0]; });
 const ai = (photoId: string, description = '') => analyzeComplaintPhoto({ photoId, description, room: 'kamar2' });
@@ -106,6 +106,33 @@ describe('J5 renter registration (Andi → A3/05)', () => {
     const r = await resolveResident(d, '0812-0000-1117', '3275012209910009');
     expect(r.ok && r.identity.kind).toBe('renter');
   });
+});
+
+describe('registration fixes stay with their owner', () => {
+  const needsFix = () => {
+    const seed = buildSeed();
+    const reg = seed.registrations.find((x) => x.person.name === 'Hendra Kusuma')!;
+    return { d: apply(seed, reviewRegistration, { id: reg.id, decision: 'needsFix', note: 'Unggah AJB' }), reg };
+  };
+  test('only the owner who submitted it can resubmit', () => {
+    const { d, reg } = needsFix();
+    expect(() => apply(d, resubmitRegistration, { id: reg.id, ownerCustomerId: 1107, patch: { person: { ...reg.person, name: 'Orang Lain' } } })).toThrow('error.notFound');
+  });
+  test('a resubmit cannot move the registration to another owner, unit or type', () => {
+    const { d, reg } = needsFix();
+    const out = apply(d, resubmitRegistration, { id: reg.id, ownerCustomerId: reg.ownerCustomerId, patch: { ownerCustomerId: 1107, unitId: 'vh-A3-05', type: 'renter', person: { ...reg.person, householdSize: 4 } } });
+    expect(out.registrations.find((x) => x.id === reg.id)).toMatchObject({ ownerCustomerId: reg.ownerCustomerId, unitId: reg.unitId, type: reg.type, status: 'submitted', person: { householdSize: 4 } });
+  });
+});
+
+test('a unit cannot end up with two active renters when two registrations are approved', () => {
+  const person = (name: string, ktp: string, hp: string) => ({ name, no_ktp: ktp, no_hp: hp, householdSize: 2 });
+  const base = { unitId: 'vh-A3-05', ownerCustomerId: 1107, type: 'renter' as const, lease: { start: '2026-12-01', end: '2027-11-30' }, leaseDocPhotoId: 'sample:LEASE', vehicles: [], moveIn: { date: '2026-12-01', time: '08.00–12.00' }, iplPayer: 'renter' as const };
+  let d = apply(buildSeed(), submitRegistration, { ...base, person: person('Satu', '3275010000000001', '081300000001') });
+  d = apply(d, submitRegistration, { ...base, person: person('Dua', '3275010000000002', '081300000002') });
+  const [a, b] = d.registrations.slice(-2);
+  d = apply(d, reviewRegistration, { id: a.id, decision: 'approve' });
+  expect(() => apply(d, reviewRegistration, { id: b.id, decision: 'approve' })).toThrow('error.unitHasRenter');
 });
 
 test('Review Focus #4: after the lease ends the renter is out and IPL goes back to the owner', async () => {

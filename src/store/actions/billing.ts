@@ -1,5 +1,5 @@
 import { addMonths, monthOf, nowISO } from '../../domain/clock';
-import { overdueBills, prepayPlan, prepayQuote } from '../../domain/ipl';
+import { overdueBills, prepayPlan, prepayQuote, wifiPrepayPlan } from '../../domain/ipl';
 import { formatRp } from '../../domain/money';
 import { offeredConsequences } from '../../domain/consequences';
 import type { Consequence, ISODate, MonthKey, Payment, Vehicle, WifiSub } from '../../domain/types';
@@ -15,8 +15,11 @@ const payerKey = (d: Parameters<Action<unknown>>[0], unitId: string) => {
   return r ? `renter:${r.id}` : ownerKey(u.ownerCustomerId);
 };
 
-/** Resident payment (simulated VA/QRIS). With a packageId the months come from the pay-ahead plan. */
-export const payBills: Action<{ unitId: string; kind: 'ipl' | 'wifi'; months?: MonthKey[]; packageId?: string; method: Payment['method'] }> = (d, p) => {
+/**
+ * Resident payment (simulated VA/QRIS). With a packageId the months come from the pay-ahead plan.
+ * `payer` is who is paying: a renter only ever pays the months billed to the renter.
+ */
+export const payBills: Action<{ unitId: string; kind: 'ipl' | 'wifi'; months?: MonthKey[]; packageId?: string; method: Payment['method']; payer?: 'owner' | 'renter' }> = (d, p) => {
   const unit = unitOf(d, p.unitId);
   const project = projectOf(d, unit.projectId);
   const s = project.settings;
@@ -32,24 +35,30 @@ export const payBills: Action<{ unitId: string; kind: 'ipl' | 'wifi'; months?: M
     const rate = p.kind === 'ipl' ? type.iplRate : s.wifi.packages.find((w) => w.id === d.wifi.find((x) => x.unitId === unit.id)?.packageId)?.price ?? 0;
     if (p.kind === 'ipl') {
       const renter = d.renters.find((r) => r.unitId === unit.id && r.status === 'active');
-      months = prepayPlan(unit, type, s, renter, d.bills, d.today, pkg.months);
+      months = prepayPlan(unit, type, s, renter, d.bills, d.today, pkg.months, p.payer === 'renter' ? 'renter' : undefined);
     } else {
-      const start = monthOf(d.today);
-      months = Array.from({ length: pkg.months }, (_, i) => addMonths(start, i));
+      const sub = d.wifi.find((x) => x.unitId === unit.id);
+      const wifiPkg = sub && s.wifi.packages.find((w) => w.id === sub.packageId);
+      months = sub && wifiPkg ? wifiPrepayPlan(sub, wifiPkg, mine(), d.today, pkg.months) : [];
     }
+    // A package is charged in full, so it must cover that many billed months.
+    if (months.length < pkg.months) throw new ActionError(p.payer === 'renter' ? 'error.prepayLease' : 'error.packageUnavailable');
     const q = prepayQuote(pkg, rate);
     amount = q.net;
     discount = q.discount;
   }
   if (!months.length) throw new ActionError('error.generic');
   resyncUnit(d, unit.id, { [p.kind]: months.slice().sort().at(-1) });
-  const targets = mine().filter((b) => months.includes(b.month) && !b.paymentId && !b.free);
+  const targets = mine().filter((b) => months.includes(b.month) && !b.paymentId && !b.free && (p.payer !== 'renter' || b.payer === 'renter'));
+  if (!targets.length) throw new ActionError('error.nothingToPay');
   if (!p.packageId) amount = targets.reduce((a, b) => a + b.amount, 0);
   const payment: Payment = { id: nextId(d, 'PAY'), unitId: unit.id, kind: p.kind, months: targets.map((b) => b.month), amount, discount, method: p.method, paidAt: nowISO(d.today), recordedBy: 'resident', packageId: p.packageId };
   d.payments.push(payment);
   for (const b of targets) b.paymentId = payment.id;
   notify(d, `admin:${unit.projectId}`, 'notif.admin.paymentReceived', { unit: unit.code, amount: formatRp(amount) }, `/dashboard/ipl/${unit.id}`);
-  notify(d, payerKey(d, unit.id), 'notif.paymentReceipt', { amount: formatRp(amount) }, '/app/bills');
+  const renter = d.renters.find((x) => x.unitId === unit.id && x.status === 'active');
+  const receiptTo = p.payer === 'renter' && renter ? `renter:${renter.id}` : p.payer === 'owner' ? ownerKey(unit.ownerCustomerId) : payerKey(d, unit.id);
+  notify(d, receiptTo, 'notif.paymentReceipt', { amount: formatRp(amount) }, '/app/bills');
 };
 
 /** Admin records a payment received outside the app (no fine option exists). */

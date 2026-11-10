@@ -98,4 +98,8 @@ export default {
   "activity.settingsChanged.features": "Pengaturan fitur diubah.",
   "activity.settingsChanged.fuel": "Pengaturan standar bensin diubah.",
   "activity.settingsChanged.budget": "Pengaturan anggaran diubah.",
+  "error.nothingToPay": "Tidak ada tagihan yang perlu dibayar.",
+  "error.prepayLease": "Paket ini melewati akhir masa sewa Anda. Pilih bulan yang masih dalam masa sewa.",
+  "error.alreadyHandled": "Langkah ini sudah diproses di tempat lain. Tampilan sudah diperbarui.",
+  "error.outOfRange": "Ada nilai di luar batas. Periksa isian yang ditandai merah.",
 } as Record<string, string>;

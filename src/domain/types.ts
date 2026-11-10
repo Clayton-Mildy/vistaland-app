@@ -94,7 +94,7 @@ export type FindingStage = 'draft' | 'submitted' | 'verified' | 'assigned' | 'in
 export interface AiResult { verdict: 'valid' | 'invalid' | 'unclear'; category: ComplaintCategory; confidence: number; noteKey: string; area?: { x: number; y: number; w: number; h: number } }
 export interface FixCheck { verdict: 'fixed' | 'notFixed' | 'wrongArea'; confidence: number; noteKey: string; at: ISODateTime; photoId: string }
 export interface Finding {
-  id: string; room: RoomId; photoIds: string[]; description: string; ai: AiResult; manualReview: boolean; category: ComplaintCategory;
+  id: string; room: RoomId; photoIds: string[]; photoHash?: string; description: string; ai: AiResult; manualReview: boolean; category: ComplaintCategory;
   estateNote?: string; groupId?: string; mandorId?: string; checklist: { label: string; done: boolean }[]; fixChecks: FixCheck[];
   stage: FindingStage; history: { stage: FindingStage; at: ISODateTime; by: string }[];
 }

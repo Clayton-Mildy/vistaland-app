@@ -15,3 +15,8 @@ test('15-digit NPWP equals the 16-digit form with a leading 0', () => {
   expect(normalizeNpwp('12.345.678.9-012.000')).toBe('0123456789012000');
   expect(normalizeNpwp('0123456789012000')).toBe('0123456789012000');
 });
+
+test('a country code typed before the local 0 still matches (+62 0812…)', () => {
+  expect(normalizePhone('+62 0812-3456-0102')).toBe('6281234560102');
+  expect(normalizePhone('620812 3456 0102')).toBe('6281234560102');
+});

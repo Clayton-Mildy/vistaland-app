@@ -98,4 +98,8 @@ export default {
   "activity.settingsChanged.features": "Features settings changed.",
   "activity.settingsChanged.fuel": "Fuel standard settings changed.",
   "activity.settingsChanged.budget": "Budget settings changed.",
+  "error.nothingToPay": "There is nothing left to pay.",
+  "error.prepayLease": "This package runs past the end of your lease. Pick months within your lease.",
+  "error.alreadyHandled": "This step was already handled elsewhere. The view is now up to date.",
+  "error.outOfRange": "Some values are out of range. Check the fields marked in red.",
 } as Record<string, string>;

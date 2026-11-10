@@ -31,7 +31,8 @@ export default function RenterRegistrationWizard() {
   const today = useToday();
   const ctx = useResident()!;
   const [params] = useSearchParams();
-  const fixing = useData((d) => d.registrations.find((r) => r.id === params.get('fix')));
+  // A fix link only opens this owner's own registration that the estate sent back.
+  const fixing = useData((d) => d.registrations.find((r) => r.id === params.get('fix') && r.status === 'needsFix' && r.ownerCustomerId === ctx.owner?.customer_id && ctx.unitIds.includes(r.unitId)));
   const units = useData((d) => d.units).filter((u) => ctx.unitIds.includes(u.id));
   const cardsCfg = ctx.settings.cards;
   const [step, setStep] = useState(fixing ? 1 : 0);
@@ -79,7 +80,7 @@ export default function RenterRegistrationWizard() {
   };
   const submit = () => {
     const payload = { unitId, ownerCustomerId: ctx.owner!.customer_id, type, person: { name: name.trim(), no_ktp: ktp.replace(/\D/g, ''), no_hp: phone.trim(), householdSize: household }, lease: type === 'renter' ? { start, end } : undefined, ajbDate: type === 'newOwner' ? ajb : undefined, leaseDocPhotoId: doc, vehicles, cards, moveIn: { date: moveDate, time: moveTime }, iplPayer: type === 'renter' ? payer : ('owner' as const) };
-    const r = fixing ? run(resubmitRegistration, { id: fixing.id, patch: payload }) : run(submitRegistration, payload);
+    const r = fixing ? run(resubmitRegistration, { id: fixing.id, ownerCustomerId: ctx.owner!.customer_id, patch: payload }) : run(submitRegistration, payload);
     if (!r.ok) return setError(t(r.error));
     const reg = fixing ?? useStore.getState().data.registrations.at(-1)!;
     const fresh = useStore.getState().data.registrations.find((x) => x.id === reg.id)!;

@@ -11,17 +11,19 @@ export const useLocalized = () => {
   return (l: L) => l[lang];
 };
 
+/** The unit's bills of one kind. A renter only gets the IPL months billed to them, never the owner's. */
 export function useUnitBills(kind: 'ipl' | 'wifi'): (Bill & { status: BillStatus })[] {
   const ctx = useResident();
   const unitId = ctx?.unit.id;
   const dueDay = ctx?.settings.ipl.dueDay ?? 10;
+  const renterOnly = kind === 'ipl' && ctx?.role === 'renter';
   return useDerived(
     (d) =>
       d.bills
-        .filter((b) => b.unitId === unitId && b.kind === kind)
+        .filter((b) => b.unitId === unitId && b.kind === kind && (!renterOnly || b.payer === 'renter'))
         .sort((a, b) => a.month.localeCompare(b.month))
         .map((b) => ({ ...b, status: billStatus(b, d.today, dueDay) })),
-    [unitId, kind, dueDay],
+    [unitId, kind, dueDay, renterOnly],
   );
 }
 

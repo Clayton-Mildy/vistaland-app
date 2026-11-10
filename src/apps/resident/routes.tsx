@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useResident } from '../../store/hooks';
+import { PhoneAside } from '../launcher/PhoneAside';
+import { StorageNotice } from '../../ui/StorageNotice';
 import { PhoneFrame } from '../../ui/PhoneFrame';
 import Login from './auth/Login';
 import Otp from './auth/Otp';
@@ -52,7 +54,8 @@ function Entry() {
 
 export default function ResidentApp() {
   return (
-    <PhoneFrame>
+    <PhoneFrame aside={<PhoneAside />}>
+      <StorageNotice />
       <Routes>
         <Route index element={<Entry />} />
         <Route path="splash" element={<Splash />} />

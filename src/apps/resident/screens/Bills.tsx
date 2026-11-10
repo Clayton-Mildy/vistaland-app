@@ -46,7 +46,7 @@ export default function Bills() {
           vaSeed={ctx.unit.code}
           summary={<p className="text-sm text-ink/60">{intent.label}</p>}
           onPay={(method) => {
-            const r = run(payBills, { unitId: ctx.unit.id, kind: intent.kind, months: intent.months, packageId: intent.packageId, method });
+            const r = run(payBills, { unitId: ctx.unit.id, kind: intent.kind, months: intent.months, packageId: intent.packageId, method, payer: ctx.role === 'renter' ? 'renter' : 'owner' });
             return r.ok ? null : r.error;
           }}
         />
@@ -67,6 +67,7 @@ function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrep
   const ctx = useResident()!;
   const today = useToday();
   const bills = useUnitBills('ipl');
+  const payerFilter = ctx.role === 'renter' ? ('renter' as const) : undefined;
   const allBills = useData((d) => d.bills);
   const s = ctx.settings;
   const rate = ctx.type.iplRate;
@@ -88,11 +89,13 @@ function IplTab({ onPay, openPrepay }: { onPay: (i: PayIntent) => void; openPrep
   const activeCns = ctx.role === 'owner' ? ctx.unit.consequences.filter((c) => !c.endedAt) : [];
   const isRenterPaid = (m: MonthKey) => ctx.role === 'owner' && bills.find((b) => b.month === m)?.payer === 'renter';
 
-  const packages: PrepayPackage[] = s.features.prepay ? [{ id: 'ipl-1', months: 1, discountType: 'none', value: 0, active: true }, ...s.prepay.ipl.filter((p) => p.active)] : [];
+  const planFor = (n: number) => prepayPlan(ctx.unit, ctx.type, s, ctx.renter, allBills, today, n, payerFilter);
+  // Only offer packages that can be filled with billed months (a renter's lease may end sooner).
+  const packages: PrepayPackage[] = s.features.prepay ? [{ id: 'ipl-1', months: 1, discountType: 'none' as const, value: 0, active: true }, ...s.prepay.ipl.filter((p) => p.active)].filter((p) => planFor(p.months).length >= p.months) : [];
   const { quotes } = prepayOptions(packages, rate);
   const selected = quotes.find((x) => x.p.id === pkgId);
   const prepayExpired = s.prepay.validUntil < today;
-  const plan = selected ? (selected.p.id === 'ipl-1' ? prepayPlan(ctx.unit, ctx.type, s, ctx.renter, allBills, today, 1) : prepayPlan(ctx.unit, ctx.type, s, ctx.renter, allBills, today, selected.p.months)) : [];
+  const plan = selected ? planFor(selected.p.months) : [];
   const visible = showAll ? bills : bills.filter((b) => b.month >= addMonths(current, -6));
 
   let hero: { title: string; body: string };

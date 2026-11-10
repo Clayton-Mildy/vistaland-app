@@ -3,6 +3,7 @@
 // 16-digit form with a leading 0.
 export const normalizePhone = (s: string): string => {
   const digits = s.replace(/\D/g, '');
+  if (digits.startsWith('620')) return `62${digits.slice(3)}`; // "+62 0812…": country code typed before the local 0
   if (digits.startsWith('62')) return digits;
   if (digits.startsWith('0')) return `62${digits.slice(1)}`;
   return `62${digits}`;

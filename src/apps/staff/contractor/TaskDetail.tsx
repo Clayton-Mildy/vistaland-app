@@ -2,7 +2,7 @@ import { CheckCircle2, ChevronLeft, RotateCcw, Sparkles, XCircle } from 'lucide-
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { afterSamplesFor } from '../../../data/samples';
-import { checkFix, hashString } from '../../../domain/ai';
+import { fixCheckFor } from '../../../domain/ai';
 import { formatDateTime } from '../../../domain/clock';
 import { useLang, useT } from '../../../i18n';
 import { startWork, submitAfterPhoto, toggleChecklistItem } from '../../../store/actions';
@@ -35,7 +35,7 @@ export default function TaskDetail() {
     setPicking(false);
     setScanning(p);
     setTimeout(() => {
-      const check = checkFix({ beforePhotoId: before, afterPhotoId: p.id, afterHash: p.hash, beforeHash: String(hashString(before)) });
+      const check = fixCheckFor(f, p);
       run(submitAfterPhoto, { complaintId: c.id, findingId: f.id, photoId: p.id, check });
       setScanning(null);
     }, 1800);

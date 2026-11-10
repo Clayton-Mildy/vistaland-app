@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { PhoneAside } from '../launcher/PhoneAside';
+import { StorageNotice } from '../../ui/StorageNotice';
 import { PhoneFrame } from '../../ui/PhoneFrame';
 import ContractorHistory from './contractor/History';
 import TaskDetail from './contractor/TaskDetail';
@@ -14,7 +16,8 @@ import { StaffShell } from './StaffShell';
 
 export default function StaffApp() {
   return (
-    <PhoneFrame>
+    <PhoneFrame aside={<PhoneAside />}>
+      <StorageNotice />
       <Routes>
         <Route index element={<StaffLogin />} />
         <Route element={<StaffShell />}>

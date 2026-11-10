@@ -51,9 +51,9 @@ export const sendHandoverReceipt: Action<{ unitId: string }> = (d, p) => {
   notify(d, ownerKey(unit.ownerCustomerId), 'notif.receiptSent', { unit: unit.code }, '/app/handover');
 };
 
-function startBast(d: AppData, unitId: string, source: 'signed' | 'auto') {
+function startBast(d: AppData, unitId: string, source: 'signed' | 'auto', date: ISODate = d.today) {
   const unit = unitOf(d, unitId);
-  unit.handover.bastDate = d.today;
+  unit.handover.bastDate = date;
   unit.handover.bastSource = source;
   if (unit.occupancy !== 'occupied') unit.occupancy = 'handedOver';
   resyncUnit(d, unit.id);
@@ -69,9 +69,18 @@ export const signBast: Action<{ unitId: string }> = (d, p) => {
   startBast(d, unit.id, 'signed');
 };
 
+/** The automatic handover date stated in the last call: last call + interval. */
+function autoBastDate(d: AppData, unitId: string): ISODate | undefined {
+  const unit = unitOf(d, unitId);
+  const s = projectOf(d, unit.projectId).settings.handover;
+  const last = unit.handover.calls.at(-1);
+  return last && unit.handover.calls.length >= s.maxCalls ? addDays(last.sentAt, s.intervalDays) : undefined;
+}
+
 export const issueAutoBast: Action<{ unitId: string }> = (d, p) => {
   if (unitOf(d, p.unitId).handover.bastDate) return;
-  startBast(d, p.unitId, 'auto');
+  const due = autoBastDate(d, p.unitId);
+  startBast(d, p.unitId, 'auto', due && due < d.today ? due : d.today);
 };
 
 /** H+interval after the last call with no schedule → automatic BAST (if enabled). */
@@ -81,7 +90,8 @@ export function autoBastRule(d: AppData) {
     const s = projectOf(d, unit.projectId).settings.handover;
     const last = h.calls.at(-1);
     if (!s.autoBast || h.bastDate || h.slot || !last || h.calls.length < s.maxCalls) continue;
-    if (d.today >= addDays(last.sentAt, s.intervalDays)) startBast(d, unit.id, 'auto');
+    const due = addDays(last.sentAt, s.intervalDays);
+    if (d.today >= due) startBast(d, unit.id, 'auto', due);
   }
 }
 ON_DAY_CHANGE.push(autoBastRule);

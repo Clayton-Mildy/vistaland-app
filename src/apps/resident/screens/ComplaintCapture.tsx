@@ -44,7 +44,7 @@ export default function ComplaintCapture() {
   };
   const add = (manualReview: boolean) => {
     if (!photo || !ai) return;
-    const r = run(addFinding, { unitId: ctx.unit.id, room, photoIds: [photo.id], description: desc.trim(), ai: { ...ai, category }, manualReview });
+    const r = run(addFinding, { unitId: ctx.unit.id, room, photoIds: [photo.id], photoHash: photo.hash, description: desc.trim(), ai: { ...ai, category }, manualReview });
     if (!r.ok) return toast.show(t(r.error), 'error');
     toast.show(manualReview ? t('capture.addedManual') : t('capture.added'));
     nav('/app/complaint', { replace: true });

@@ -38,3 +38,20 @@ test('the owner sees an active consequence on the bills screen, and it disappear
   expect(el.textContent).not.toContain('Kartu akses dinonaktifkan');
   root.unmount();
 });
+
+test('a renter only sees, and is only asked to pay, the months billed to them', async () => {
+  const { run } = useStore.getState();
+  // Sari's lease now starts in August, so July is the owner's month, and it is unpaid.
+  run((d) => {
+    d.renters.find((r) => r.id === 'r-1')!.lease.start = '2026-08-01';
+    d.payments = d.payments.filter((x) => !(x.unitId === 'vh-B2-04' && x.months?.includes('2026-07')));
+    const jul = d.bills.find((b) => b.unitId === 'vh-B2-04' && b.kind === 'ipl' && b.month === '2026-07')!;
+    jul.payer = 'owner';
+    jul.paymentId = undefined;
+  }, {});
+  run(startResidentSession, { identity: { kind: 'renter', renterId: 'r-1' }, unitId: 'vh-B2-04' });
+  const { el, root } = await render();
+  expect(el.textContent).not.toContain('Jul 2026');
+  expect(el.textContent).not.toContain('tertunggak');
+  root.unmount();
+});

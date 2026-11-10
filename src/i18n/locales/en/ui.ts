@@ -7,4 +7,7 @@ export default {
   'sample.SELFIE': 'Selfie', 'sample.RECEIPT': 'Fuel receipt', 'sample.LAWN_BEFORE': 'Long grass', 'sample.LAWN_AFTER': 'Cut grass', 'sample.LEASE': 'Lease agreement',
   'demo.today': 'Demo date', 'demo.plusDay': '+1 day', 'demo.plusWeek': '+1 week', 'demo.plusMonth': '+1 month', 'demo.plus100': '+100 days',
   'demo.reset': 'Reset data', 'demo.resetConfirm': 'Restore all demo data to the start? Your changes will be lost.', 'demo.resetDone': 'Demo data restored.',
+  'demo.asideTitle': 'Demo mode',
+  'demo.asideBody': 'Sample data in this browser. Move the demo date forward to watch bills, calls and complaint windows change.',
+  'demo.openSideBySide': 'Open side by side with the dashboard',
 } as Record<string, string>;
