@@ -143,3 +143,11 @@ export const confirmSelfReportedMoveIn: Action<{ unitId: string }> = (d, p) => {
   unit.occupancy = 'occupied';
   notify(d, ownerKey(unit.ownerCustomerId), 'notif.moveInConfirmed', { unit: unit.code }, '/app/home');
 };
+
+/** Commercial owners book when to collect their PBB (SPPT) at the marketing office. */
+export const schedulePbbPickup: Action<{ unitId: string; date: ISODate }> = (d, p) => {
+  const unit = unitOf(d, p.unitId);
+  if (!unit.legal) throw new ActionError('error.featureDisabled');
+  unit.legal.pbb.pickup = { date: p.date };
+  notify(d, `admin:${unit.projectId}`, 'notif.admin.pbbPickup', { unit: unit.code, date: p.date }, `/dashboard/ipl/${unit.id}`);
+};

@@ -7,7 +7,7 @@ import type { AppData, ResidentIdentity } from '../../domain/types';
 import { apply } from '../test/apply';
 import { setToday } from './demo';
 import { applyConsequence, liftConsequence, payBills, requestWifi, setWifiStatus } from './billing';
-import { confirmMoveInAtGate, markReadyForHandover, pickHandoverSlot, requestMoveIn, saveHandoverChecklist, sendHandoverCall, sendHandoverReceipt, signBast, signRules } from './onboarding';
+import { confirmMoveInAtGate, markReadyForHandover, pickHandoverSlot, requestMoveIn, saveHandoverChecklist, schedulePbbPickup, sendHandoverCall, sendHandoverReceipt, signBast, signRules } from './onboarding';
 import { acceptPanic, resolvePanic, triggerPanic } from './security';
 import { activateApp } from './session';
 import { setUnitTypeRate, updateSettings } from './settings';
@@ -136,4 +136,11 @@ test('billStatus stays consistent after the clock moves', () => {
   const d = apply(buildSeed(), setToday, { date: '2026-12-11' });
   const dec = iplBills(d, 'vh-A1-07').find((b) => b.month === '2026-12')!;
   expect(billStatus(dec, d.today, 10)).toBe('overdue');
+});
+
+test('PBB pickup booking is stored on the unit and the estate is told', () => {
+  const d = apply(buildSeed(), schedulePbbPickup, { unitId: 'vh-B1-02', date: '2026-11-12' });
+  expect(unit(d, 'vh-B1-02').legal!.pbb.pickup).toEqual({ date: '2026-11-12' });
+  expect(d.notifications.some((n) => n.to === 'admin:vh' && n.text.key === 'notif.admin.pbbPickup')).toBe(true);
+  expect(() => apply(buildSeed(), schedulePbbPickup, { unitId: 'hp-C3-14', date: '2026-11-12' })).toThrow();
 });
