@@ -59,7 +59,7 @@ Every app has a small demo bar:
 - **Demo date**: the prototype's "today" starts at **10 Nov 2026**. `+1 hari`, `+1 minggu`, `+1 bulan` and `+100 hari` move it forward. Bills, overdue marks, handover calls, the complaint window and lease ends all follow this date.
 - **Reset data** restores the starting data (it asks first).
 
-Data is saved in the browser (`localStorage`, key `vhome.data.v1`; photos in IndexedDB). Open several tabs and they stay in sync live. If browser storage is blocked (some private windows), the app still works and shows a notice that changes won't survive a reload.
+Data is saved in the browser (`localStorage`, key `vhome.data.v1`; photos in IndexedDB). Open several tabs and they stay in sync live. Each tab has its own login, so one tab can be the owner and another the renter; a new tab starts logged out. If browser storage is blocked (some private windows), the app still works and shows a notice that changes won't survive a reload.
 
 ## Demo script (journeys 1–11)
 
