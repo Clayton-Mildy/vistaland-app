@@ -6,6 +6,7 @@ import type {
 } from '../domain/types';
 import { roomsOf } from './floorplans';
 import { digits, int, mulberry32, personName, pick, type Rng } from './generate';
+import { seedGarden } from './seedGarden';
 
 export const SEED_TODAY = '2026-11-10';
 const ts = (d: string, hm = '09:00') => `${d}T${hm}:00`;
@@ -462,7 +463,7 @@ export function buildSeed(): AppData {
   // Gardening, finance -----------------------------------------------------------
   const zones: [string, number, string][] = [
     ['Taman gerbang', 1500, '2026-11-06'], ['Jalur hijau Blok A', 2000, '2026-11-02'], ['Jalur hijau Blok B', 2500, '2026-10-26'],
-    ['Jalur hijau Blok C', 2000, '2026-11-03'], ['Sekitar kolam & clubhouse', 1800, '2026-10-23'], ['Taman bermain', 1200, '2026-11-07'],
+    ['Jalur hijau Blok C', 2000, '2026-11-03'], ['Sekitar kolam & clubhouse', 1800, '2026-10-06'], ['Taman bermain', 1200, '2026-11-07'],
   ];
   zones.forEach(([name, area, lastCut], i) => d.zones.push({ id: `zone-${i + 1}`, projectId: 'vh', name, area, perMonth: 2, lastCut }));
   d.machines.push({ id: 'mesin-1', projectId: 'vh', name: 'Mesin potong #1', hours: 412, status: 'baik' }, { id: 'mesin-2', projectId: 'vh', name: 'Mesin potong #2', hours: 388, status: 'servis' });
@@ -513,6 +514,7 @@ export function buildSeed(): AppData {
     { id: next('N'), to: 'renter:r-1', text: { key: 'notif.leaseEnding', params: { date: '30 Nov 2026' } }, link: '/app/account', createdAt: ts('2026-11-01', '08:00'), read: false },
   );
 
+  seedGarden(d, next);
   syncAllBills(d);
   return d;
 }
