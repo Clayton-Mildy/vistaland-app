@@ -4,9 +4,9 @@ import { Launcher } from './apps/launcher/Launcher';
 import ResidentApp from './apps/resident/routes';
 import ListingPage from './apps/public/ListingPage';
 import StaffApp from './apps/staff/routes';
+import DashboardApp from './apps/dashboard/routes';
 import { ToastProvider } from './ui/Toast';
 
-const Placeholder = ({ name }: { name: string }) => <div className="p-6 text-sm">{name}</div>;
 const Root = () => (
   <ToastProvider>
     <Outlet />
@@ -21,7 +21,7 @@ export const router = createBrowserRouter([
       { path: '/demo', element: <Demo /> },
       { path: '/app/*', element: <ResidentApp /> },
       { path: '/staff/*', element: <StaffApp /> },
-      { path: '/dashboard/*', element: <Placeholder name="Dashboard" /> },
+      { path: '/dashboard/*', element: <DashboardApp /> },
       { path: '/listing/:id', element: <ListingPage /> },
     ],
   },

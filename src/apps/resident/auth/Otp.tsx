@@ -1,5 +1,5 @@
 import { ChevronLeft, MessageSquareText } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { ResidentIdentity } from '../../../domain/types';
 import { useT } from '../../../i18n';
@@ -22,7 +22,11 @@ export default function Otp() {
   const [error, setError] = useState<string | null>(null);
   const masked = useMemo(() => (state ? state.phone.replace(/\D/g, '').replace(/^(\d{4})\d+(\d{3})$/, '$1••••$2') : ''), [state]);
 
+  // Announce each code once (StrictMode runs mount effects twice in development).
+  const announced = useRef<string | null>(null);
   useEffect(() => {
+    if (announced.current === code) return;
+    announced.current = code;
     toast.show(t('otp.sms', { code }), 'info');
   }, [code, t, toast]);
 

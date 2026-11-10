@@ -82,6 +82,13 @@ describe('J5 renter registration (Andi → A3/05)', () => {
     expect(d.registrations.find((x) => x.id === reg.id)).toMatchObject({ status: 'needsFix', reviewNote: 'Unggah perjanjian sewa yang ditandatangani' });
     expect(d.renters).toHaveLength(seed.renters.length);
   });
+  test('estate can approve the seeded free registration (Lukas, A2/05) and he can log in', async () => {
+    const seed = buildSeed();
+    const reg = seed.registrations.find((x) => x.person.name === 'Lukas Wibowo')!;
+    const d = apply(seed, reviewRegistration, { id: reg.id, decision: 'approve' });
+    const r = await resolveResident(d, '0812-0000-1117', '3275012209910009');
+    expect(r.ok && r.identity.kind).toBe('renter');
+  });
 });
 
 test('Review Focus #4: after the lease ends the renter is out and IPL goes back to the owner', async () => {

@@ -1,10 +1,10 @@
 import { CalendarCheck, FileText, KeyRound } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { handoverSlots } from '../../../data/content';
 import { formatDate } from '../../../domain/clock';
 import { useLang, useT } from '../../../i18n';
-import { pickHandoverSlot, signBast } from '../../../store/actions';
+import { markCallRead, pickHandoverSlot, signBast } from '../../../store/actions';
 import { useResident, useRun, useToday } from '../../../store/hooks';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
@@ -36,6 +36,11 @@ export default function Handover() {
   const step = h.bastDate ? 4 : h.receiptSentAt ? 2 : h.slot ? 1 : 0;
   const lastCall = h.calls.at(-1);
   const slots = handoverSlots(today);
+  // Opening this screen is the read receipt the estate sees on its call table.
+  const unreadCall = !!lastCall && !lastCall.readAt && !h.bastDate;
+  useEffect(() => {
+    if (unreadCall) run(markCallRead, { unitId: ctx.unit.id });
+  }, [unreadCall, ctx.unit.id, run]);
 
   const confirmSlot = () => {
     if (!slot) return;
