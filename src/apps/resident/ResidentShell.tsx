@@ -29,7 +29,7 @@ export function ResidentShell() {
     <SegmentTheme theme={ctx.segment} className="flex h-full flex-col">
       <main id="resident-scroll" className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
         <Outlet />
-        {!showNav && <DevelopedBy className="pb-5 pt-2" />}
+        <DevelopedBy className="pb-6 pt-4" />
       </main>
       {showNav && (
         <nav className="border-t border-line bg-white pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5">
@@ -41,7 +41,6 @@ export function ResidentShell() {
               </NavLink>
             ))}
           </div>
-          <DevelopedBy className="pt-0.5" />
         </nav>
       )}
     </SegmentTheme>

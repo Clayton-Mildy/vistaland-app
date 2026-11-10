@@ -7,6 +7,13 @@ import { describe, expect, test } from 'vitest';
  */
 export const REFRESHED: string[] = [
   'src/apps/resident/ResidentShell.tsx',
+  // Task 2
+  'src/ui/IconTile.tsx',
+  'src/apps/resident/home/MenuGrid.tsx',
+  'src/apps/resident/ui/ScreenHeader.tsx',
+  'src/apps/resident/ui/ScreenBody.tsx',
+  'src/apps/resident/ui/HomeBand.tsx',
+  'src/apps/resident/ui/HouseCard.tsx',
 ];
 
 const RULES: [string, RegExp][] = [

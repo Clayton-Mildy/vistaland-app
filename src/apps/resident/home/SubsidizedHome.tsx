@@ -62,12 +62,12 @@ export default function SubsidizedHome() {
         <Card>
           <h3 className="mb-3 px-1 text-[13px] font-bold text-ink/70">{t('home.quick')}</h3>
           <div className="grid grid-cols-3 gap-y-4">
-            <IconTile icon={PaintRoller} tone="orange" label={t('feature.renovation')} locked={lockedOf('renovation')} onClick={() => nav('/app/renovation')} />
-            <IconTile icon={MessageSquareWarning} tone="red" label={t('feature.complaint')} locked={lockedOf('complaint')} badge={win.status === 'open' ? t('menu.daysBadge', { n: win.daysLeft }) : undefined} onClick={() => nav('/app/complaint')} />
-            <IconTile icon={Car} tone="violet" label={t('home.vehicles')} onClick={() => nav('/app/cards')} />
-            <IconTile icon={Mail} tone="violet" label={t('feature.feedback')} locked={lockedOf('feedback')} onClick={() => nav('/app/feedback')} />
-            <IconTile icon={ShoppingBag} tone="aqua" label={t('feature.businesses')} locked={lockedOf('businesses')} onClick={() => nav('/app/businesses')} />
-            <IconTile icon={Info} tone="blue" label={t('home.estateInfo')} onClick={() => setInfo(true)} />
+            <IconTile icon={PaintRoller} label={t('feature.renovation')} locked={lockedOf('renovation')} onClick={() => nav('/app/renovation')} />
+            <IconTile icon={MessageSquareWarning} label={t('feature.complaint')} locked={lockedOf('complaint')} badge={win.status === 'open' ? t('menu.daysBadge', { n: win.daysLeft }) : undefined} onClick={() => nav('/app/complaint')} />
+            <IconTile icon={Car} label={t('home.vehicles')} onClick={() => nav('/app/cards')} />
+            <IconTile icon={Mail} label={t('feature.feedback')} locked={lockedOf('feedback')} onClick={() => nav('/app/feedback')} />
+            <IconTile icon={ShoppingBag} label={t('feature.businesses')} locked={lockedOf('businesses')} onClick={() => nav('/app/businesses')} />
+            <IconTile icon={Info} label={t('home.estateInfo')} onClick={() => setInfo(true)} />
           </div>
         </Card>
         <Announcements />
