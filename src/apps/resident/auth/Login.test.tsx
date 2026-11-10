@@ -41,3 +41,19 @@ test('when the purchase-record lookup fails, login shows an error instead of spi
   expect(el.querySelector('button[type=submit]')!.hasAttribute('disabled')).toBe(false);
   root.unmount();
 });
+
+test('demo accounts stay folded away until "Akun demo" is pressed, then fill the form in one tap', async () => {
+  const el = document.createElement('div');
+  document.body.appendChild(el);
+  const root = createRoot(el);
+  await act(async () => {
+    root.render(<MemoryRouter><ToastProvider><Login /></ToastProvider></MemoryRouter>);
+  });
+  const rina = () => [...el.querySelectorAll('button')].find((b) => b.textContent?.startsWith('Rina'));
+  expect(rina()).toBeUndefined();
+  const toggle = [...el.querySelectorAll('button')].find((b) => b.textContent === translate('id', 'login.demoToggle'))!;
+  await act(async () => toggle.click());
+  await act(async () => rina()!.click());
+  expect((el.querySelector('input') as HTMLInputElement).value).toBe('0812-3456-0102');
+  root.unmount();
+});

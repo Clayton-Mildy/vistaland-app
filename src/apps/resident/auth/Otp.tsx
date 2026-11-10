@@ -45,22 +45,28 @@ export default function Otp() {
   };
 
   return (
-    <SegmentTheme theme="komersil" className="h-full bg-white px-6 pt-6 md:pt-12">
-      <button onClick={() => nav(-1)} className="-ml-2 rounded-full p-1.5 text-ink/60 hover:bg-paper" aria-label="back">
-        <ChevronLeft className="h-6 w-6" />
-      </button>
-      <h1 className="mt-3 text-[26px] font-extrabold">{t('otp.title')}</h1>
-      <p className="mt-1 text-sm text-ink/55">{t('otp.body', { phone: masked })}</p>
-      <div className="mt-4 flex items-start gap-2 rounded-2xl bg-[#FBF0D0] p-3 text-xs text-[#7A5600]">
-        <MessageSquareText className="mt-0.5 h-4 w-4 shrink-0" />
-        <span>{t('otp.demo')} <b className="font-mono text-sm tracking-widest">{code}</b></span>
+    <SegmentTheme theme="komersil" className="no-scrollbar h-full overflow-y-auto bg-paper">
+      <header className="bg-brand-dark px-4 pb-14 pt-4 text-white md:pt-9">
+        <button onClick={() => nav(-1)} className="-ml-1.5 rounded-full p-1.5 text-white/90 hover:bg-white/10" aria-label={t('common.back')}>
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <h1 className="mt-3 px-1 text-2xl font-semibold">{t('otp.title')}</h1>
+        <p className="mt-1 px-1 text-sm text-white/75">{t('otp.body', { phone: masked })}</p>
+      </header>
+      <div className="-mt-10 px-4 pb-6">
+        <div className="rounded-2xl border border-line bg-white p-5 shadow-card">
+          <form onSubmit={verify} className="space-y-4">
+            <Input autoFocus inputMode="numeric" maxLength={6} value={value} onChange={(e) => { setValue(e.target.value.replace(/\D/g, '')); setError(null); }} className="h-14 text-center font-mono text-2xl tracking-[0.5em]" placeholder="••••••" />
+            {error && <p className="text-sm font-medium text-[#B4192A]">{error}</p>}
+            <Button block size="lg" type="submit" disabled={value.length !== 6}>{t('otp.verify')}</Button>
+          </form>
+          <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-ink/55">
+            <MessageSquareText className="h-3.5 w-3.5" />
+            {t('otp.demo')} <span className="font-mono tracking-widest text-ink/75">{code}</span>
+          </p>
+        </div>
+        <button onClick={() => { setCode(newCode()); setValue(''); }} className="mt-4 w-full text-center text-sm font-medium text-brand-dark">{t('otp.resend')}</button>
       </div>
-      <form onSubmit={verify} className="mt-5 space-y-4">
-        <Input autoFocus inputMode="numeric" maxLength={6} value={value} onChange={(e) => { setValue(e.target.value.replace(/\D/g, '')); setError(null); }} className="h-14 text-center font-mono text-2xl tracking-[0.5em]" placeholder="••••••" />
-        {error && <p className="text-sm font-medium text-[#B4192A]">{error}</p>}
-        <Button block size="lg" type="submit" disabled={value.length !== 6}>{t('otp.verify')}</Button>
-      </form>
-      <button onClick={() => { setCode(newCode()); setValue(''); }} className="mt-4 w-full text-center text-sm font-semibold text-brand-dark">{t('otp.resend')}</button>
     </SegmentTheme>
   );
 }

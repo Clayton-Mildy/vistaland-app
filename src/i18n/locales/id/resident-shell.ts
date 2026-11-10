@@ -101,4 +101,5 @@ export default {
   "feature.complaint": "Komplain garansi",
   "feature.numbers": "Nomor penting",
   "login.error.service": "Data pembelian sedang tidak bisa dicek. Coba lagi sebentar lagi.",
+  "login.demoToggle": "Akun demo",
 } as Record<string, string>;

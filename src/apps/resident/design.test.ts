@@ -14,6 +14,12 @@ export const REFRESHED: string[] = [
   'src/apps/resident/ui/ScreenBody.tsx',
   'src/apps/resident/ui/HomeBand.tsx',
   'src/apps/resident/ui/HouseCard.tsx',
+  // Task 3
+  'src/apps/resident/auth/Splash.tsx',
+  'src/apps/resident/auth/Login.tsx',
+  'src/apps/resident/auth/Otp.tsx',
+  'src/apps/resident/auth/UnitPicker.tsx',
+  'src/apps/resident/auth/Welcome.tsx',
 ];
 
 const RULES: [string, RegExp][] = [

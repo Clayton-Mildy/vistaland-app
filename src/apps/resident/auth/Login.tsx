@@ -1,4 +1,4 @@
-import { ShieldCheck } from 'lucide-react';
+import { ChevronDown, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { RESIDENT_PERSONAS } from '../../../data/personas';
@@ -20,6 +20,7 @@ export default function Login() {
   const [ktp, setKtp] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
 
   useEffect(() => {
     const p = RESIDENT_PERSONAS.find((x) => x.key === params.get('persona'));
@@ -49,41 +50,49 @@ export default function Login() {
   };
 
   return (
-    <SegmentTheme theme="komersil" className="no-scrollbar h-full overflow-y-auto bg-white">
-      <div className="flex min-h-full flex-col px-6 pb-6 pt-8 md:pt-12">
+    <SegmentTheme theme="komersil" className="no-scrollbar h-full overflow-y-auto bg-paper">
+      <header className="bg-brand-dark px-6 pb-14 pt-6 text-white md:pt-12">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-[0.16em] text-brand">VHome · Vistaland</span>
-          <LangToggle />
+          <span className="text-xs font-medium uppercase tracking-[0.14em] text-gold">VHome · Vistaland</span>
+          <LangToggle dark />
         </div>
-        <h1 className="mt-3 text-[26px] font-extrabold leading-tight">{t('login.title')}</h1>
-        <MoniBubble className="mt-4" pose="waveSm">{t('login.moni')}</MoniBubble>
-        <form onSubmit={submit} className="mt-5 space-y-4">
-          <Field label={t('login.phone')}>
-            <Input inputMode="tel" autoComplete="tel" placeholder="0812 3456 7890" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </Field>
-          <Field label={t('login.ktp')} hint={t('login.ktpHint')}>
-            <Input inputMode="numeric" placeholder="3275 xxxx xxxx xxxx" value={ktp} onChange={(e) => setKtp(e.target.value)} />
-          </Field>
-          {error && <p className="rounded-xl bg-[#FDE8EA] px-3 py-2.5 text-sm font-medium text-[#B4192A]">{error}</p>}
-          <Button block size="lg" loading={busy} type="submit">{t('login.submit')}</Button>
-        </form>
-        <p className="mt-3 flex items-start gap-2 text-xs text-ink/50">
+        <h1 className="mt-5 text-2xl font-semibold leading-tight">{t('login.title')}</h1>
+      </header>
+      <div className="-mt-10 px-4 pb-6">
+        <div className="rounded-2xl border border-line bg-white p-5 shadow-card">
+          <MoniBubble size={52}>{t('login.moni')}</MoniBubble>
+          <form onSubmit={submit} className="mt-4 space-y-4">
+            <Field label={t('login.phone')}>
+              <Input inputMode="tel" autoComplete="tel" placeholder="0812 3456 7890" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </Field>
+            <Field label={t('login.ktp')} hint={t('login.ktpHint')}>
+              <Input inputMode="numeric" placeholder="3275 xxxx xxxx xxxx" value={ktp} onChange={(e) => setKtp(e.target.value)} />
+            </Field>
+            {error && <p className="rounded-xl bg-[#FDE8EA] px-3 py-2.5 text-sm font-medium text-[#B4192A]">{error}</p>}
+            <Button block size="lg" loading={busy} type="submit">{t('login.submit')}</Button>
+          </form>
+        </div>
+        <p className="mt-4 flex items-start gap-2 px-1 text-xs text-ink/55">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#17703D]" />
           {t('login.privacy')}
         </p>
-        <div className="mt-6 rounded-2xl bg-paper p-3">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-ink/45">{t('login.demo')}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {RESIDENT_PERSONAS.map((p) => (
-              <button key={p.key} type="button" onClick={() => { setPhone(p.phone); setKtp(p.ktp); setError(null); }} className="rounded-full border border-line bg-white px-2.5 py-1 text-xs font-semibold hover:border-brand/50">
-                {p.name.split(' ')[0]} · {p.unit.split(' ')[0]}
-              </button>
-            ))}
-          </div>
+        <div className="mt-6 text-center">
+          <button type="button" aria-expanded={demoOpen} onClick={() => setDemoOpen((o) => !o)} className="inline-flex items-center gap-1 text-sm font-medium text-ink/60 hover:text-ink">
+            {t('login.demoToggle')}
+            <ChevronDown className={demoOpen ? 'h-4 w-4 rotate-180 transition' : 'h-4 w-4 transition'} />
+          </button>
+          {demoOpen && (
+            <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+              {RESIDENT_PERSONAS.map((p) => (
+                <button key={p.key} type="button" onClick={() => { setPhone(p.phone); setKtp(p.ktp); setError(null); }} className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-medium hover:border-brand/50">
+                  {p.name.split(' ')[0]} · {p.unit.split(' ')[0]}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        <p className="mt-4 text-center text-xs text-ink/45">{t('login.renterNote')}</p>
-        <div className="flex-1" />
-        <DevelopedBy className="mt-6" />
+        <p className="mt-5 text-center text-xs text-ink/50">{t('login.renterNote')}</p>
+        <DevelopedBy className="mt-8" />
       </div>
     </SegmentTheme>
   );

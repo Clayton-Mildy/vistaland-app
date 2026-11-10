@@ -8,6 +8,7 @@ import { Button } from '../../../ui/Button';
 import { Confetti } from '../../../ui/Confetti';
 import { cx } from '../../../ui/cx';
 import { Moni } from '../../../ui/Moni';
+import { Section } from '../../../ui/Section';
 import { SegmentTheme } from '../../../ui/SegmentTheme';
 
 export const STEP_ROUTE: Record<OnboardingKey, string> = { handover: '/app/handover', app: '/app/home', rules: '/app/rules', moveIn: '/app/move-in', occupied: '/app/move-in' };
@@ -24,39 +25,38 @@ export default function Welcome() {
   const next = nextOnboardingStep(steps);
   return (
     <SegmentTheme theme={ctx.segment} className="no-scrollbar h-full overflow-y-auto bg-paper">
-      <div className="relative overflow-hidden bg-gradient-to-b from-brand to-brand-dark px-6 pb-24 pt-10 text-center text-white md:pt-14">
+      <div className="relative overflow-hidden bg-brand-dark px-6 pb-24 pt-10 text-center text-white md:pt-14">
         <Confetti />
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/70">{ctx.project.name}</p>
-        <h1 className="mt-2 text-4xl font-extrabold">{t('welcome.title')}</h1>
-        <p className="mt-1 text-sm text-white/85">{t('welcome.body')}</p>
-        <Moni pose="thumbs" size={130} className="mx-auto mt-3" />
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-gold">{ctx.project.name}</p>
+        <h1 className="mt-2 text-3xl font-semibold">{t('welcome.title')}</h1>
+        <p className="mt-1 text-sm text-white/80">{t('welcome.body')}</p>
+        <Moni pose="thumbs" size={110} className="mx-auto mt-4" />
       </div>
-      <div className="relative -mt-16 px-5">
-        <div className="rounded-2xl bg-white p-4 shadow-lift">
-          <div className="flex items-center justify-between">
-            <span className="text-lg font-bold">{ctx.unit.code} · {ctx.type.name}</span>
-          </div>
+      <div className="relative -mt-16 space-y-3 px-4 pb-4">
+        <div className="rounded-2xl border border-line bg-white p-4 shadow-card">
+          <p className="text-base font-semibold">{ctx.unit.code} · {ctx.type.name}</p>
           <dl className="mt-2 space-y-1.5 text-sm">
-            <div className="flex justify-between"><dt className="text-ink/50">{t('welcome.owner')}</dt><dd className="font-semibold">{ctx.name}</dd></div>
-            {tx && <div className="flex justify-between"><dt className="text-ink/50">{t('welcome.akad')}</dt><dd className="font-semibold">{formatDate(tx.akad_date, lang)} · {tx.payment_scheme}</dd></div>}
-            <div className="flex justify-between"><dt className="text-ink/50">{t('welcome.handover')}</dt><dd className="font-semibold">{ctx.unit.handover.bastDate ? formatDate(ctx.unit.handover.bastDate, lang) : t('welcome.handoverPending')}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-ink/55">{t('welcome.owner')}</dt><dd className="truncate font-medium">{ctx.name}</dd></div>
+            {tx && <div className="flex justify-between gap-3"><dt className="text-ink/55">{t('welcome.akad')}</dt><dd className="font-medium">{formatDate(tx.akad_date, lang)} · {tx.payment_scheme}</dd></div>}
+            <div className="flex justify-between gap-3"><dt className="text-ink/55">{t('welcome.handover')}</dt><dd className="font-medium">{ctx.unit.handover.bastDate ? formatDate(ctx.unit.handover.bastDate, lang) : t('welcome.handoverPending')}</dd></div>
           </dl>
         </div>
-        <h2 className="mb-2 mt-5 px-1 text-[15px] font-bold">{t('welcome.steps')}</h2>
-        <div className="space-y-2">
-          {steps.map((s, i) => (
-            <div key={s.key} className={cx('flex items-center gap-3 rounded-2xl border bg-white p-3', s.key === next ? 'border-brand ring-2 ring-brand/10' : 'border-line')}>
-              <span className={cx('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold', s.done ? 'bg-brand text-white' : 'bg-paper text-ink/50')}>
-                {s.done ? <Check className="h-4 w-4" /> : i + 1}
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold">{t(`onboarding.${s.key}`)}</p>
-                <p className="text-xs text-ink/50">{t(`onboarding.${s.key}.hint`)}</p>
+        <Section title={t('welcome.steps')} className="mt-4">
+          <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-card">
+            {steps.map((s, i) => (
+              <div key={s.key} className={cx('flex items-center gap-3 p-4', i > 0 && 'border-t border-line', s.key === next && 'bg-brand-tint/40')}>
+                <span className={cx('flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold', s.done ? 'bg-brand-dark text-white' : s.key === next ? 'border-2 border-brand-dark text-brand-dark' : 'bg-paper text-ink/45')}>
+                  {s.done ? <Check className="h-4 w-4" /> : i + 1}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{t(`onboarding.${s.key}`)}</p>
+                  <p className="text-xs text-ink/55">{t(`onboarding.${s.key}.hint`)}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-5 space-y-2 pb-6">
+            ))}
+          </div>
+        </Section>
+        <div className="space-y-2 pt-2">
           {next && next !== 'app' && <Button block size="lg" icon={<ArrowRight className="h-4 w-4" />} onClick={() => nav(STEP_ROUTE[next], { replace: true })}>{t(`onboarding.${next}.cta`)}</Button>}
           <Button block variant="ghost" onClick={() => nav('/app/home', { replace: true })}>{t('welcome.later')}</Button>
         </div>

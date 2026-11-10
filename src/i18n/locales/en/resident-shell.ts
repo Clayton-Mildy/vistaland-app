@@ -101,4 +101,5 @@ export default {
   "feature.complaint": "Warranty complaint",
   "feature.numbers": "Key numbers",
   "login.error.service": "Purchase records can't be checked right now. Please try again shortly.",
+  "login.demoToggle": "Demo accounts",
 } as Record<string, string>;
