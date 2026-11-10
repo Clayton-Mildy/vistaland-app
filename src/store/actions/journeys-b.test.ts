@@ -7,7 +7,7 @@ import type { AppData } from '../../domain/types';
 import { vlesConfig } from '../../vles/client';
 import { apply } from '../test/apply';
 import { addFinding, assignMandor, createWorkGroup, estateFinalOk, estateVerifyFinding, residentConfirm, startWork, submitAfterPhoto, submitComplaint } from './complaints';
-import { claimVoucher, postListing, replyFeedback, sendFeedback, submitLead } from './community';
+import { claimVoucher, postListing, publishAnnouncement, replyFeedback, reportListing, resolveListingReport, sendFeedback, submitLead } from './community';
 import { setToday } from './demo';
 import { addExpense } from './finance';
 import { addFuelEntry, logMowing, rephotoMowingLog } from './gardener';
@@ -44,6 +44,23 @@ describe('J3 complaint with AI (Joko)', () => {
     expect(d.notifications.some((n) => n.to === 'owner:2314' && n.text.key === 'notif.complaint.confirm')).toBe(true);
     d = apply(d, residentConfirm, { complaintId: c().id, findingId: f().id });
     expect(trackerIndex(c())).toBe(7);
+  });
+  test('estate can correct category, room and note when verifying', () => {
+    let d = apply(buildSeed(), addFinding, { unitId: 'hp-C3-14', room: 'kamar2', photoIds: ['sample:DAMP'], description: 'Rembes', ai: ai('sample:DAMP'), manualReview: false });
+    d = apply(d, submitComplaint, { unitId: 'hp-C3-14' });
+    const c = d.complaints.find((x) => x.unitId === 'hp-C3-14')!;
+    d = apply(d, estateVerifyFinding, { complaintId: c.id, findingId: c.findings[0].id, category: 'plafonAtap', room: 'kamarUtama', note: 'Sumber dari atap' });
+    expect(d.complaints.find((x) => x.id === c.id)!.findings[0]).toMatchObject({ stage: 'verified', category: 'plafonAtap', room: 'kamarUtama', estateNote: 'Sumber dari atap' });
+  });
+  test('a work group only takes verified findings of one category', () => {
+    const seed = buildSeed();
+    const verified = seed.complaints.flatMap((c) => c.findings.filter((f) => f.stage === 'verified').map((f) => ({ c, f })));
+    const other = seed.complaints.flatMap((c) => c.findings.filter((f) => f.stage === 'submitted').map((f) => ({ c, f })))[0];
+    expect(verified.length).toBeGreaterThan(0);
+    expect(() => apply(seed, createWorkGroup, { projectId: 'vh', refs: [{ complaintId: other.c.id, findingId: other.f.id }], material: 'x', estimateDays: 1 })).toThrow('error.generic');
+    const v = verified[0];
+    const mixed = verified.find((x) => x.f.category !== v.f.category);
+    if (mixed) expect(() => apply(seed, createWorkGroup, { projectId: 'vh', refs: [{ complaintId: v.c.id, findingId: v.f.id }, { complaintId: mixed.c.id, findingId: mixed.f.id }], material: 'x', estimateDays: 1 })).toThrow('error.generic');
   });
   test('an invalid photo can be sent for manual review', () => {
     const d = apply(buildSeed(), addFinding, { unitId: 'hp-C3-14', room: 'dapur', photoIds: ['sample:CLEAN'], description: 'dinding', ai: ai('sample:CLEAN'), manualReview: true });
@@ -136,6 +153,19 @@ describe('community', () => {
     d = apply(d, replyFeedback, { id: fb.id, reply: 'Akan dipasang minggu depan' });
     expect(d.feedback.find((x) => x.id === fb.id)!.status).toBe('replied');
     expect(d.notifications.some((n) => n.to === 'owner:2314' && n.text.key === 'notif.feedbackReplied')).toBe(true);
+  });
+  test('estate resolves a reported listing: keep clears the flag, remove takes it down and tells the poster', () => {
+    let d = apply(buildSeed(), postListing, { unitId: 'vh-A1-07', kind: 'dijual', title: 'Sepeda anak', price: 300000, priceUnit: 'once', description: '', photoIds: [] });
+    const id = d.listings.at(-1)!.id;
+    d = apply(d, reportListing, { id });
+    const kept = apply(d, resolveListingReport, { id, remove: false });
+    expect(kept.listings.find((l) => l.id === id)!.reported).toBe(false);
+    const removed = apply(d, resolveListingReport, { id, remove: true });
+    expect(removed.listings.some((l) => l.id === id)).toBe(false);
+    expect(removed.notifications.some((n) => n.to === 'owner:1107' && n.text.key === 'notif.listingRemoved')).toBe(true);
+  });
+  test('an announcement needs a title and a body', () => {
+    expect(() => apply(buildSeed(), publishAnnouncement, { projectId: 'vh', tag: 'info', title: '  ', body: 'Isi', date: '2026-11-10' })).toThrow('common.required');
   });
   test('voucher claim reduces stock and issues a code', () => {
     const seed = buildSeed();

@@ -52,9 +52,10 @@ export const submitComplaint: Action<{ unitId: string }> = (d, p) => {
   notify(d, `admin:${unit.projectId}`, 'notif.admin.complaintSubmitted', { id: c.id, unit: unit.code, n: c.findings.length }, '/dashboard/complaints');
 };
 
-export const estateVerifyFinding: Action<{ complaintId: string; findingId: string; category?: ComplaintCategory; note?: string }> = (d, p) => {
+export const estateVerifyFinding: Action<{ complaintId: string; findingId: string; category?: ComplaintCategory; room?: RoomId; note?: string }> = (d, p) => {
   const { c, f } = find(d, p.complaintId, p.findingId);
   if (p.category) f.category = p.category;
+  if (p.room) f.room = p.room;
   if (p.note) f.estateNote = p.note;
   move(d, c, f.id, 'verified', 'estate');
   notify(d, residentOf(d, c.unitId), 'notif.complaint.verified', { id: c.id }, '/app/complaint/track');
@@ -70,7 +71,10 @@ export const estateRejectFinding: Action<{ complaintId: string; findingId: strin
 /** Contractor groups similar verified findings across units into one work order. */
 export const createWorkGroup: Action<{ projectId: string; refs: { complaintId: string; findingId: string }[]; material: string; estimateDays: number }> = (d, p) => {
   if (!p.refs.length) throw new ActionError('error.generic');
-  const first = find(d, p.refs[0].complaintId, p.refs[0].findingId).f;
+  const picked = p.refs.map((r) => find(d, r.complaintId, r.findingId).f);
+  const first = picked[0];
+  // One work order = one kind of job, and only findings the estate already verified.
+  if (picked.some((f) => f.stage !== 'verified' || f.category !== first.category || f.groupId)) throw new ActionError('error.generic');
   const id = nextId(d, 'GRP');
   d.workGroups.push({ id, projectId: p.projectId, category: first.category, refs: p.refs, material: p.material, estimateDays: p.estimateDays, createdAt: nowISO(d.today) });
   for (const r of p.refs) find(d, r.complaintId, r.findingId).f.groupId = id;

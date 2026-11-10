@@ -27,7 +27,8 @@ export const replyFeedback: Action<{ id: string; reply: string }> = (d, p) => {
 };
 
 export const publishAnnouncement: Action<Omit<Announcement, 'id' | 'createdAt'>> = (d, p) => {
-  d.announcements.push({ ...p, id: nextId(d, 'ANN'), createdAt: nowISO(d.today) });
+  if (!p.title.trim() || !p.body.trim()) throw new ActionError('common.required');
+  d.announcements.push({ ...p, title: p.title.trim(), body: p.body.trim(), id: nextId(d, 'ANN'), createdAt: nowISO(d.today) });
   const recipients = new Set<string>();
   for (const u of d.units) {
     if (u.projectId !== p.projectId || !u.ownerCustomerId || !u.appActivatedAt) continue;
@@ -61,6 +62,18 @@ export const reportListing: Action<{ id: string }> = (d, p) => {
   if (!l) throw new ActionError('error.notFound');
   l.reported = true;
   notify(d, `admin:${l.projectId}`, 'notif.admin.listingReported', { title: l.title }, '/dashboard/community');
+};
+
+/** Estate decision on a reported listing: keep it (clear the flag) or take it down and tell the poster. */
+export const resolveListingReport: Action<{ id: string; remove: boolean }> = (d, p) => {
+  const l = d.listings.find((x) => x.id === p.id);
+  if (!l) throw new ActionError('error.notFound');
+  if (!p.remove) {
+    l.reported = false;
+    return;
+  }
+  d.listings = d.listings.filter((x) => x.id !== p.id);
+  notify(d, ownerKey(unitOf(d, l.unitId).ownerCustomerId), 'notif.listingRemoved', { title: l.title }, '/app/marketplace');
 };
 
 /** Lead from a public listing form or from "Ask marketing" in the app. */

@@ -1,5 +1,5 @@
 import { addMonths, diffDays, monthOf } from './clock';
-import { BOARD_COLUMNS, isOverSla, isUnfinished } from './complaints';
+import { BOARD_COLUMNS, complaintWindow, isOverSla, isUnfinished } from './complaints';
 import { budgetVsActual, fuelReconciliation } from './finance';
 import { billStatus, firstBilledMonth, freeUntilMonth } from './ipl';
 import type { AppData, Bill, Consequence, I18nText, MonthKey, Unit } from './types';
@@ -205,4 +205,31 @@ export function unitBillingRows(d: AppData, projectId: string): UnitBillingRow[]
       };
     })
     .sort((a, b) => a.unit.code.localeCompare(b.unit.code));
+}
+
+/** Header numbers for the estate complaint board. */
+export function complaintKpis(d: AppData, projectId: string) {
+  const s = d.projects.find((p) => p.id === projectId)!.settings;
+  const units = d.units.filter((u) => u.projectId === projectId);
+  const ids = new Set(units.map((u) => u.id));
+  const submitted = d.complaints.filter((c) => ids.has(c.unitId) && c.submittedAt);
+  const findings = submitted.flatMap((c) => c.findings.map((f) => ({ c, f })));
+  const month = monthOf(d.today);
+  const doneDays = findings
+    .map(({ c, f }) => ({ c, at: f.stage === 'done' ? f.history.find((h) => h.stage === 'done')?.at : undefined }))
+    .filter((x): x is { c: typeof x.c; at: string } => !!x.at)
+    .map(({ c, at }) => diffDays(c.submittedAt!.slice(0, 10), at.slice(0, 10)));
+  const complained = new Set(submitted.map((c) => c.unitId));
+  return {
+    activeFindings: findings.filter(({ f }) => isUnfinished(f)).length,
+    avgDaysToDone: doneDays.length ? Math.round((sum(doneDays) / doneDays.length) * 10) / 10 : null,
+    failedFixChecksThisMonth: sum(findings.map(({ f }) => f.fixChecks.filter((x) => x.verdict !== 'fixed' && x.at.startsWith(month)).length)),
+    windowEndingSoon: units
+      .filter((u) => {
+        if (complained.has(u.id)) return false;
+        const w = complaintWindow(u.handover.bastDate, s.complaints.windowDays, d.today);
+        return w.status === 'open' && w.daysLeft <= 7;
+      })
+      .map((u) => u.id),
+  };
 }

@@ -87,4 +87,5 @@ export default {
   "activity.legalUpdated": "Legal document status for {unit} updated.",
   "activity.paymentRecorded": "IPL payment for {unit} recorded ({amount}).",
   "notif.legalUpdated": "The legal document status for unit {unit} was updated. Check the Legal menu.",
+  "notif.listingRemoved": "Your listing “{title}” was taken down by the estate after a report.",
 } as Record<string, string>;

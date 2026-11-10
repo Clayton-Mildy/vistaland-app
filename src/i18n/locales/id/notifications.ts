@@ -87,4 +87,5 @@ export default {
   "activity.legalUpdated": "Status dokumen legal {unit} diperbarui.",
   "activity.paymentRecorded": "Pembayaran IPL {unit} dicatat ({amount}).",
   "notif.legalUpdated": "Status dokumen legal unit {unit} diperbarui. Cek di menu Legal.",
+  "notif.listingRemoved": "Iklan “{title}” diturunkan estate karena dilaporkan warga.",
 } as Record<string, string>;
