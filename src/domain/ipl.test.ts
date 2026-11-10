@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { buildSeed } from '../data/seed';
-import { billStatus, firstBilledMonth, overdueBills, prepayMonths, prepayQuote, syncAllBills, syncBills } from './ipl';
+import { billStatus, firstBilledMonth, freeUntilMonth, overdueBills, prepayMonths, prepayQuote, syncAllBills, syncBills } from './ipl';
 import type { Bill, ProjectSettings, Renter, Unit, UnitType } from './types';
 
 const seed = buildSeed();
@@ -24,6 +24,10 @@ describe('syncBills', () => {
     expect(status(bills, '2026-11')).toBe('due');
     expect(status(bills, '2026-12')).toBe('upcoming');
     expect(bills.map((b) => b.month).at(-1)).toBe('2026-12');
+  });
+  test('freeUntilMonth is the month before the first bill, even beyond generated bills', () => {
+    expect(freeUntilMonth('2026-10-26', { freeEnabled: true, freeMonths: 6, dueDay: 10 })).toBe('2027-03');
+    expect(freeUntilMonth('2026-10-26', { freeEnabled: false, freeMonths: 6, dueDay: 10 })).toBeUndefined();
   });
   test('free IPL off starts billing the month after BAST', () => {
     expect(firstBilledMonth('2026-03-05', { freeEnabled: false, freeMonths: 6, dueDay: 10 })).toBe('2026-04');

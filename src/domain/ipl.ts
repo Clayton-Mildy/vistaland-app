@@ -6,6 +6,11 @@ export function firstBilledMonth(bastDate: ISODate, s: ProjectSettings['ipl']): 
   return addMonths(monthOf(bastDate), s.freeEnabled ? Math.max(1, s.freeMonths) : 1);
 }
 
+/** Last free month (undefined when free IPL is off). */
+export function freeUntilMonth(bastDate: ISODate, s: ProjectSettings['ipl']): MonthKey | undefined {
+  return s.freeEnabled && s.freeMonths > 0 ? addMonths(firstBilledMonth(bastDate, s), -1) : undefined;
+}
+
 const maxMonth = (...ms: (MonthKey | undefined)[]) => ms.filter(Boolean).sort().at(-1)!;
 
 function inLease(renter: Renter | undefined, m: MonthKey) {
