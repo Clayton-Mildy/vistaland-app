@@ -1,4 +1,5 @@
 import { addDays, addMonths, monthOf } from '../domain/clock';
+import { syncAllBills } from '../domain/ipl';
 import type {
   AppData, Complaint, ComplaintCategory, Customer, Expense, ExpenseCategory, Finding, FindingStage, LegalStatus,
   Payment, Project, ProjectSettings, RoomId, Segment, Unit, UnitType,
@@ -512,6 +513,7 @@ export function buildSeed(): AppData {
     { id: next('N'), to: 'renter:r-1', text: { key: 'notif.leaseEnding', params: { date: '30 Nov 2026' } }, link: '/app/account', createdAt: ts('2026-11-01', '08:00'), read: false },
   );
 
+  syncAllBills(d);
   return d;
 }
 
