@@ -19,7 +19,7 @@ export default {
   'category.keramik': 'Tiles & floor', 'category.pintuJendela': 'Doors & windows', 'category.listrik': 'Electrical',
   'category.pipa': 'Plumbing & sanitary', 'category.plafonAtap': 'Ceiling & roof', 'category.lainnya': 'Other',
   'stage.draft': 'Draft', 'stage.submitted': 'Awaiting estate check', 'stage.verified': 'Awaiting assignment',
-  'stage.assigned': 'Assigned to foreman', 'stage.inProgress': 'In progress', 'stage.workDone': 'Passed AI check',
+  'stage.assigned': 'Assigned to foreman', 'stage.inProgress': 'In progress', 'stage.workDone': 'Work finished',
   'stage.awaitingResident': 'Awaiting your confirmation', 'stage.done': 'Done', 'stage.rejected': 'Rejected',
   'room.teras': 'Porch', 'room.carport': 'Carport', 'room.ruangTamu': 'Living room', 'room.ruangKeluarga': 'Family room',
   'room.dapur': 'Kitchen', 'room.kamarUtama': 'Main bedroom', 'room.kamar2': 'Bedroom 2', 'room.kamar3': 'Bedroom 3',

@@ -143,7 +143,7 @@ Each resident persona has a known phone + KTP pair shown on the login screen as 
   - **Pasang WiFi:** promo banner (only if enabled), packages, install slot, request.
   - **Kartu akses & stiker:** free 1 card + 1 sticker claim, paid extras, vehicles, pay.
   - **Renovasi:** list, new request, step timeline, deposit VA, refund account, sign renovation BAST or raise an objection.
-  - **Komplain garansi:** window bar, a floor plan of the unit type (tap a room) → capture a finding (camera/upload or sample photo) → **AI check** → list of findings → submit once. Then a 7-stage tracker per finding with before/after photos, and confirm when done.
+  - **Komplain garansi:** window bar, a floor plan of the unit type (tap a room) → capture a finding (camera/upload or sample photo) → **AI check** → list of findings → submit once. Then a 7-stage tracker per finding with before/after photos, and confirm when done. The resident sees the AI verdict only for their own photo; the AI check of the contractor's after-photo is shown to the estate (dashboard) only, and the resident sees the after-photo once the work has passed.
   - **Kotak masukan (suggestion box):** topic chips, text, optional photo; "my suggestions" with estate replies.
   - **Usaha warga:** directory with category filters and WhatsApp links; register a business (estate verifies).
   - **Jual beli:** listings by tab, post a listing, detail.

@@ -39,7 +39,7 @@ export default {
   "notif.complaint.verified": "Findings in complaint {id} were verified by the estate.",
   "notif.complaint.rejected": "One finding in complaint {id} is not covered by the warranty. See the estate note.",
   "notif.complaint.assigned": "Findings in complaint {id} were assigned to a foreman.",
-  "notif.complaint.workDone": "The repair in complaint {id} passed the AI photo check. The estate will check on site.",
+  "notif.complaint.workDone": "The repair in complaint {id} is finished. The estate will check it on site.",
   "notif.complaint.confirm": "The estate checked the repair for complaint {id}. Confirm once it is fixed.",
   "notif.mandor.assigned": "{n} new findings assigned to you.",
   "notif.mandor.aiFailed": "The repair photo for unit {unit} did not pass the AI check. Fix it and retake the photo.",

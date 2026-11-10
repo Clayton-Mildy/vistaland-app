@@ -39,7 +39,7 @@ export default {
   "notif.complaint.verified": "Temuan di komplain {id} sudah diverifikasi estate.",
   "notif.complaint.rejected": "Satu temuan di komplain {id} tidak termasuk garansi. Lihat catatan estate.",
   "notif.complaint.assigned": "Temuan di komplain {id} sudah ditugaskan ke mandor.",
-  "notif.complaint.workDone": "Perbaikan di komplain {id} lolos cek foto AI. Estate akan mengecek di lokasi.",
+  "notif.complaint.workDone": "Perbaikan di komplain {id} sudah selesai dikerjakan. Estate akan mengecek di lokasi.",
   "notif.complaint.confirm": "Perbaikan komplain {id} sudah dicek estate. Konfirmasi kalau sudah beres.",
   "notif.mandor.assigned": "{n} temuan baru ditugaskan ke Anda.",
   "notif.mandor.aiFailed": "Foto perbaikan unit {unit} belum lolos cek AI. Perbaiki lalu foto ulang.",

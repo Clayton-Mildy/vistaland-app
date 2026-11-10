@@ -19,7 +19,7 @@ export default {
   'category.keramik': 'Keramik & lantai', 'category.pintuJendela': 'Pintu & jendela', 'category.listrik': 'Listrik',
   'category.pipa': 'Pipa & sanitasi', 'category.plafonAtap': 'Plafon & atap', 'category.lainnya': 'Lainnya',
   'stage.draft': 'Draf', 'stage.submitted': 'Menunggu verifikasi estate', 'stage.verified': 'Menunggu penugasan',
-  'stage.assigned': 'Ditugaskan ke mandor', 'stage.inProgress': 'Sedang dikerjakan', 'stage.workDone': 'Lolos cek AI',
+  'stage.assigned': 'Ditugaskan ke mandor', 'stage.inProgress': 'Sedang dikerjakan', 'stage.workDone': 'Pekerjaan selesai',
   'stage.awaitingResident': 'Menunggu konfirmasi warga', 'stage.done': 'Selesai', 'stage.rejected': 'Ditolak',
   'room.teras': 'Teras', 'room.carport': 'Carport', 'room.ruangTamu': 'Ruang tamu', 'room.ruangKeluarga': 'Ruang keluarga',
   'room.dapur': 'Dapur', 'room.kamarUtama': 'K. tidur utama', 'room.kamar2': 'K. tidur 2', 'room.kamar3': 'K. tidur 3',

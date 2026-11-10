@@ -1,4 +1,3 @@
-import { CheckCircle2, Sparkles, XCircle } from 'lucide-react';
 import { formatDateTime } from '../../../domain/clock';
 import { trackerIndex, TRACKER_STEPS } from '../../../domain/complaints';
 import type { Finding } from '../../../domain/types';
@@ -8,7 +7,6 @@ import { useData, useResident, useRun } from '../../../store/hooks';
 import { AppBar } from '../../../ui/AppBar';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
-import { cx } from '../../../ui/cx';
 import { EmptyState } from '../../../ui/EmptyState';
 import { Moni } from '../../../ui/Moni';
 import { Photo } from '../../../ui/Photo';
@@ -49,7 +47,9 @@ function FindingCard({ complaintId, f }: { complaintId: string; f: Finding }) {
   const [lang] = useLang();
   const run = useRun();
   const toast = useToast();
-  const lastFix = f.fixChecks.at(-1);
+  // The contractor's AI photo check is for the estate only. The resident just sees the after-photo
+  // once the work has passed and is with the estate (or done).
+  const afterPhoto = ['workDone', 'awaitingResident', 'done'].includes(f.stage) ? f.fixChecks.at(-1)?.photoId : undefined;
   const steps = ['submitted', 'verified', 'assigned', 'inProgress', 'workDone', 'awaitingResident', 'done'] as const;
   const at = (s: string) => f.history.find((h) => h.stage === s)?.at;
   const reached = (s: (typeof steps)[number]) => steps.indexOf(s) <= steps.indexOf(f.stage as (typeof steps)[number]);
@@ -70,15 +70,9 @@ function FindingCard({ complaintId, f }: { complaintId: string; f: Finding }) {
         </div>
         <div>
           <p className="mb-1 text-[11px] font-semibold text-ink/45">{t('tracker.after')}</p>
-          {lastFix ? <Photo id={lastFix.photoId} className="h-28 rounded-xl" /> : <div className="flex h-28 items-center justify-center rounded-xl border-2 border-dashed border-line px-3 text-center text-[11px] text-ink/40">{t('tracker.afterPending')}</div>}
+          {afterPhoto ? <Photo id={afterPhoto} className="h-28 rounded-xl" /> : <div className="flex h-28 items-center justify-center rounded-xl border-2 border-dashed border-line px-3 text-center text-[11px] text-ink/40">{t('tracker.afterPending')}</div>}
         </div>
       </div>
-      {lastFix && (
-        <div className={cx('mt-2 flex items-start gap-2 rounded-xl p-2.5 text-xs', lastFix.verdict === 'fixed' ? 'bg-[#E3F5E9] text-[#17703D]' : 'bg-[#FDE8EA] text-[#B4192A]')}>
-          {lastFix.verdict === 'fixed' ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <XCircle className="h-4 w-4 shrink-0" />}
-          <span><b className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" />{t(`tracker.fix.${lastFix.verdict}`, { n: lastFix.confidence })}</b> {t(lastFix.noteKey)}</span>
-        </div>
-      )}
       {f.estateNote && <p className="mt-2 rounded-xl bg-paper p-2.5 text-xs text-ink/65"><b>{t('tracker.estateNote')}</b> {f.estateNote}</p>}
       {f.stage === 'rejected' ? null : (
         <Timeline
