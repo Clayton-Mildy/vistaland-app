@@ -8,7 +8,6 @@ import { useT } from '../../../i18n';
 import { addFinding } from '../../../store/actions';
 import { useResident, useRun } from '../../../store/hooks';
 import { AiScanning } from '../../../ui/AiScanning';
-import { AppBar } from '../../../ui/AppBar';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { cx } from '../../../ui/cx';
@@ -16,6 +15,8 @@ import { Field, Select, Textarea } from '../../../ui/Field';
 import { Photo } from '../../../ui/Photo';
 import { PhotoPicker, type PickedPhoto } from '../../../ui/PhotoPicker';
 import { useToast } from '../../../ui/Toast';
+import { ScreenBody } from '../ui/ScreenBody';
+import { ScreenHeader } from '../ui/ScreenHeader';
 
 const CATEGORIES: ComplaintCategory[] = ['kebocoran', 'retak', 'cat', 'keramik', 'pintuJendela', 'listrik', 'pipa', 'plafonAtap', 'lainnya'];
 
@@ -57,16 +58,16 @@ export default function ComplaintCapture() {
 
   return (
     <div>
-      <AppBar title={t('capture.title', { room: t(`room.${room}`) })} subtitle={`${ctx.unit.code} · ${ctx.type.name}`} />
-      <div className="space-y-3 p-4">
+      <ScreenHeader title={t('capture.title', { room: t(`room.${room}`) })} eyebrow={`${ctx.unit.code} · ${ctx.type.name}`} />
+      <ScreenBody>
         {phase === 'pick' && (
           <>
             <Card>
-              <p className="mb-3 text-sm font-semibold">{t('capture.step1')}</p>
+              <p className="mb-3 text-base font-semibold">{t('capture.step1')}</p>
               {photo ? (
                 <div>
                   <Photo id={photo.id} className="h-48 w-full rounded-xl" />
-                  <button onClick={() => setPhoto(null)} className="mt-2 flex items-center gap-1 text-xs font-bold text-brand-dark"><RotateCcw className="h-3.5 w-3.5" />{t('capture.retake')}</button>
+                  <button onClick={() => setPhoto(null)} className="mt-2 flex items-center gap-1 text-xs font-medium text-brand"><RotateCcw className="h-3.5 w-3.5" />{t('capture.retake')}</button>
                 </div>
               ) : (
                 <PhotoPicker samples={BEFORE_SAMPLES} onPicked={setPhoto} />
@@ -90,21 +91,21 @@ export default function ComplaintCapture() {
                 {ai.area && ai.verdict === 'valid' && (
                   <>
                     <div className="absolute rounded-lg border-[3px] border-white shadow-[0_0_0_2px_rgb(var(--brand))]" style={{ left: `${ai.area.x * 100}%`, top: `${ai.area.y * 100}%`, width: `${ai.area.w * 100}%`, height: `${ai.area.h * 100}%` }} />
-                    <span className="absolute rounded-md bg-brand px-1.5 py-0.5 text-[10px] font-bold text-white" style={{ left: `${ai.area.x * 100}%`, top: `calc(${ai.area.y * 100}% - 20px)` }}>{t('capture.detected')}</span>
+                    <span className="absolute rounded-md bg-brand-dark px-1.5 py-0.5 text-xs font-medium text-white" style={{ left: `${ai.area.x * 100}%`, top: `calc(${ai.area.y * 100}% - 24px)` }}>{t('capture.detected')}</span>
                   </>
                 )}
               </Photo>
               <div className="p-4">
-                <div className={cx('flex items-center gap-2 text-base font-bold', ai.verdict === 'valid' ? 'text-[#17703D]' : ai.verdict === 'invalid' ? 'text-[#B4192A]' : 'text-[#9A5B00]')}>
+                <div className={cx('flex items-center gap-2 text-base font-semibold', ai.verdict === 'valid' ? 'text-[#17703D]' : ai.verdict === 'invalid' ? 'text-[#B4192A]' : 'text-[#9A5B00]')}>
                   {ai.verdict === 'valid' ? <CheckCircle2 className="h-5 w-5" /> : ai.verdict === 'invalid' ? <XCircle className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
                   {t(`capture.verdict.${ai.verdict}`)}
                 </div>
                 <p className="mt-1 text-sm text-ink/65">{t(ai.noteKey)}</p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-ink/55">
-                  <Sparkles className="h-3.5 w-3.5 text-brand" />
+                  <Sparkles className="h-3.5 w-3.5 text-brand-dark" />
                   {t('capture.confidence')}
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-brand" style={{ width: `${ai.confidence}%` }} /></div>
-                  <b className="tabular">{ai.confidence}%</b>
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-brand-dark" style={{ width: `${ai.confidence}%` }} /></div>
+                  <span className="font-semibold tabular text-ink/75">{ai.confidence}%</span>
                 </div>
                 {ai.verdict === 'valid' && (
                   <Field className="mt-3" label={t('capture.category')} hint={t('capture.categoryHint')}>
@@ -129,7 +130,7 @@ export default function ComplaintCapture() {
             )}
           </>
         )}
-      </div>
+      </ScreenBody>
     </div>
   );
 }

@@ -4,32 +4,35 @@ import type { Finding } from '../../../domain/types';
 import { useLang, useT } from '../../../i18n';
 import { residentConfirm } from '../../../store/actions';
 import { useData, useResident, useRun } from '../../../store/hooks';
-import { AppBar } from '../../../ui/AppBar';
 import { Button } from '../../../ui/Button';
 import { Card } from '../../../ui/Card';
 import { EmptyState } from '../../../ui/EmptyState';
 import { Moni } from '../../../ui/Moni';
 import { Photo } from '../../../ui/Photo';
 import { StatusPill } from '../../../ui/StatusPill';
-import { Stepper } from '../../../ui/Stepper';
 import { Timeline } from '../../../ui/Timeline';
 import { useToast } from '../../../ui/Toast';
+import { BandSteps } from '../ui/BandSteps';
+import { ScreenBody } from '../ui/ScreenBody';
+import { ScreenHeader } from '../ui/ScreenHeader';
 
 export default function ComplaintTracker() {
   const t = useT();
   const ctx = useResident()!;
   const complaint = useData((d) => d.complaints.find((c) => c.unitId === ctx.unit.id && c.submittedAt));
-  if (!complaint) return <div><AppBar title={t('complaint.track')} /><EmptyState title={t('tracker.none')} /></div>;
+  if (!complaint) return <div><ScreenHeader title={t('complaint.track')} /><ScreenBody><Card><EmptyState title={t('tracker.none')} /></Card></ScreenBody></div>;
   const idx = trackerIndex(complaint);
   return (
     <div>
-      <AppBar title={t('tracker.title', { id: complaint.id })} subtitle={t('tracker.sub', { n: complaint.findings.length })} />
-      <div className="space-y-3 p-4">
-        <Card>
-          <p className="text-xs text-ink/50">{t('tracker.overall')}</p>
-          <p className="mb-3 text-lg font-extrabold">{idx >= 7 ? t('complaint.allDone') : t(`complaint.step.${TRACKER_STEPS[Math.min(idx, 6)]}`)}</p>
-          <Stepper steps={TRACKER_STEPS.map((s) => t(`complaint.step.${s}`))} current={idx} />
-        </Card>
+      <ScreenHeader
+        title={t('tracker.title', { id: complaint.id })}
+        eyebrow={t('tracker.overall')}
+        figure={idx >= 7 ? t('complaint.allDone') : t(`complaint.step.${TRACKER_STEPS[Math.min(idx, 6)]}`)}
+        sub={t('tracker.sub', { n: complaint.findings.length })}
+      >
+        <BandSteps className="mt-3" steps={TRACKER_STEPS.map((s) => t(`complaint.step.${s}`))} current={idx} />
+      </ScreenHeader>
+      <ScreenBody>
         {idx >= 7 && (
           <Card className="flex items-center gap-3 border-[#BDE5CB] bg-[#F2FBF5]">
             <Moni pose="thumbs" size={56} />
@@ -37,7 +40,7 @@ export default function ComplaintTracker() {
           </Card>
         )}
         {complaint.findings.map((f) => <FindingCard key={f.id} complaintId={complaint.id} f={f} />)}
-      </div>
+      </ScreenBody>
     </div>
   );
 }
@@ -57,23 +60,23 @@ function FindingCard({ complaintId, f }: { complaintId: string; f: Finding }) {
     <Card>
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-bold">{t(`room.${f.room}`)}</p>
+          <p className="text-base font-semibold">{t(`room.${f.room}`)}</p>
           <p className="text-sm text-ink/60">{f.description}</p>
+          <p className="mt-0.5 text-xs text-ink/45">{t(`category.${f.category}`)}</p>
         </div>
         <StatusPill tone={f.stage === 'done' ? 'success' : f.stage === 'rejected' ? 'danger' : f.stage === 'awaitingResident' ? 'warning' : 'info'}>{t(`stage.${f.stage}`)}</StatusPill>
       </div>
-      <div className="mt-1"><StatusPill tone="brand">{t(`category.${f.category}`)}</StatusPill></div>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <div>
-          <p className="mb-1 text-[11px] font-semibold text-ink/45">{t('tracker.before')}</p>
+          <p className="mb-1 text-xs font-medium text-ink/45">{t('tracker.before')}</p>
           <Photo id={f.photoIds[0]} className="h-28 rounded-xl" />
         </div>
         <div>
-          <p className="mb-1 text-[11px] font-semibold text-ink/45">{t('tracker.after')}</p>
-          {afterPhoto ? <Photo id={afterPhoto} className="h-28 rounded-xl" /> : <div className="flex h-28 items-center justify-center rounded-xl border-2 border-dashed border-line px-3 text-center text-[11px] text-ink/40">{t('tracker.afterPending')}</div>}
+          <p className="mb-1 text-xs font-medium text-ink/45">{t('tracker.after')}</p>
+          {afterPhoto ? <Photo id={afterPhoto} className="h-28 rounded-xl" /> : <div className="flex h-28 items-center justify-center rounded-xl border-2 border-dashed border-line px-3 text-center text-xs text-ink/40">{t('tracker.afterPending')}</div>}
         </div>
       </div>
-      {f.estateNote && <p className="mt-2 rounded-xl bg-paper p-2.5 text-xs text-ink/65"><b>{t('tracker.estateNote')}</b> {f.estateNote}</p>}
+      {f.estateNote && <p className="mt-2 rounded-xl bg-paper p-2.5 text-xs text-ink/65"><span className="font-semibold">{t('tracker.estateNote')}</span> {f.estateNote}</p>}
       {f.stage === 'rejected' ? null : (
         <Timeline
           className="mt-4"

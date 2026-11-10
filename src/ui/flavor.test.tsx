@@ -47,3 +47,12 @@ test('under the premium flavor they take the customer-app look', async () => {
   expect(el.querySelector('h2')!.className).toContain('text-base font-semibold');
   expect(el.querySelector('p')!.className).toContain('text-xs');
 });
+
+test("a premium card's own padding replaces the default, so flush cards (p-0) really are flush", async () => {
+  const el = await render(<UiFlavor value="premium"><Card className="p-0">a</Card><Card className="p-3">b</Card><Card>c</Card></UiFlavor>);
+  const [flush, compact, plain] = [...el.querySelectorAll('div')].map((d) => d.className.split(' '));
+  expect(flush).toContain('p-0');
+  expect(flush).not.toContain('p-4');
+  expect(compact).not.toContain('p-4');
+  expect(plain).toContain('p-4');
+});

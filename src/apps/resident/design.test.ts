@@ -37,6 +37,11 @@ export const REFRESHED: string[] = [
   'src/apps/resident/screens/Handover.tsx',
   'src/apps/resident/screens/Rules.tsx',
   'src/apps/resident/screens/MoveIn.tsx',
+  // Task 8
+  'src/apps/resident/screens/Complaint.tsx',
+  'src/apps/resident/screens/ComplaintCapture.tsx',
+  'src/apps/resident/screens/ComplaintTracker.tsx',
+  'src/apps/resident/FloorPlan.tsx',
 ];
 
 const RULES: [string, RegExp][] = [
